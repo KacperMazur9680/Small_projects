@@ -1,66 +1,66 @@
 import glob 
-POSITIVE = glob.glob("Small_projects/comment_evaluationer/comments/pos/*.txt")  # Path with the positive comments
-NEGATIVE = glob.glob("Small_projects/comment_evaluationer/comments/neg/*.txt")  # Path with the negative comments
-PUNCTUATION = "-+!@#$%^&*(),.?/"
 
-# For each file in the pos/neg directory, replace html's "enter" and any punctuations with a space,
-# make every word lowercase, convert every file to a list of words,
-# convert made list to a set to avoid repetitions, add each word to the dictionary,
-# Note: if said word is already in the dictionary its value is increaced by one
-positive_dict = {}
-for file in POSITIVE:
-    with open(file, encoding="utf8") as stream:
-        content = stream.read()
+def preprocess_review(review):
+    """Removing html extras and convert str into a list."""
 
-    content = content.replace("<br /><br />", " ")
-    for punc in PUNCTUATION:
-        content = content.replace(punc, " ")
+    return review.lower().replace("<br />", " ").split()
 
-    content = content.lower().split()
-    for word in set(content):
-        positive_dict[word] = positive_dict.get(word, 0) + 1
+def count_words(path_pattern):
 
-negative_dict = {}
+    """Counting in how many files each word appeard, store the info in a dictionary."""
 
-for file in NEGATIVE:
-    with open(file, encoding="utf8") as stream:
-        content = stream.read()
+    words_count = {}
+    files = glob.glob(path_pattern)
+    for file in files:
+        with open(file, encoding="utf-8") as stream:
+            content = stream.read()
+            words = preprocess_review(content)
+            for word in set(words):
+                words_count[word] = words_count.get(word, 0) + 1
 
-    content = content.replace("<br /><br />", " ")
-    for punc in PUNCTUATION:
-        content = content.replace(punc, " ")
+    return words_count
 
-    content = content.lower().split()
-    for word in set(content):
-        negative_dict[word] = negative_dict.get(word, 0) + 1
+def compute_sentiment(words, words_count_pos, words_count_neg, debug=False):
 
-# Prompt the user for a comment
-new_comment = input("Enter your comment: ")
-words = new_comment.lower().split()
-sentiment_sum = 0
+    """Calculating the comments sentiment.
+    
+    debug - if set True, show the sentiment of each word"""
 
-# Math behind each words sentiment
-for word in words: 
-    positive = positive_dict.get(word, 0)
-    negative = negative_dict.get(word, 0)
+    comment_sentiment = 0
+    for word in words:
+        positive = words_count_pos.get(word, 0)
+        negative = words_count_neg.get(word, 0)
+        all_ = positive + negative
+        if all_ == 0:
+            word_sentiment = 0
+        else:
+            word_sentiment = (positive - negative) / all_
+        if debug:
+            print(word, word_sentiment)
+        
+        comment_sentiment += word_sentiment
+    comment_sentiment /= len(words)
 
-    all_ = positive + negative
-    if all_ != 0:
-        word_sentiment = (positive-negative)/all_
+    return comment_sentiment
+
+def print_sentiment(sentiment):
+    """Informing what kind of comment was added."""
+    if sentiment > 0:
+        label = "positive"
     else:
-        word_sentiment = 0.0
-    print(word, word_sentiment)
+        label = "negative"
+    print(f"This comment is {label}, its sentiment is equal {sentiment}.")
 
-    sentiment_sum += word_sentiment
+def main():
+    words_count_pos = count_words("Small_projects/comment_evaluationer/comments/pos/*.txt")
+    words_count_neg = count_words("Small_projects/comment_evaluationer/comments/neg/*.txt")
 
-sentiment = sentiment_sum/len(words)
+    comment = input("Enter your comment: ")
+    words = preprocess_review(comment)
+    sentiment = compute_sentiment(words, words_count_pos, words_count_neg, debug=True)
 
-# Informing what kind of comment was added
-if sentiment > 0:
-    label = "positive"
-elif sentiment < 0:
-    label = "negative"
-else:
-    label = "neutral"
+    print("------------------")
+    print_sentiment(sentiment)
 
-print(f"The added comment is {label} and it has a {sentiment} sentiment.")
+if __name__ == "__main__":
+    main()
