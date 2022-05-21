@@ -6,7 +6,7 @@ The user can choose between entering the currency and date in the command line (
 
 # Example
 > python .\Small_projects\currency_verifier\currency_verifier.py                                                                         
-Podaj walutę: EUR
+Podaj walutę: EUR                                                                                                                                                
 Podaj datę: 15.06.2021
 
 OR
