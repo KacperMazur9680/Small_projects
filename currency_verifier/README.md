@@ -5,7 +5,7 @@ A project that's using NBP's (Narodowy Bank Polski) API to answer the user's que
 The user can choose between entering the currency and date in the command line (along with the program name) or after the program has been called, it will ask for the needed data.
 
 # Example
-> python .\Small_projects\currency_verifier\currency_verifier.py
+> python .\Small_projects\currency_verifier\currency_verifier.py                                                                         
 Podaj walutę: EUR
 Podaj datę: 15.06.2021
 
