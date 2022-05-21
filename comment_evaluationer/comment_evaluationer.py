@@ -52,8 +52,8 @@ def print_sentiment(sentiment):
     print(f"This comment is {label}, its sentiment is equal {sentiment}.")
 
 def main():
-    words_count_pos = count_words("Small_projects/comment_evaluationer/comments/pos/*.txt")
-    words_count_neg = count_words("Small_projects/comment_evaluationer/comments/neg/*.txt")
+    words_count_pos = count_words("*/comment_evaluationer/comments/pos/*.txt")
+    words_count_neg = count_words("*/comment_evaluationer/comments/neg/*.txt")
 
     comment = input("Enter your comment: ")
     words = preprocess_review(comment)
