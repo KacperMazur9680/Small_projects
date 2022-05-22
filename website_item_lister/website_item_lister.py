@@ -1,22 +1,40 @@
-import click
 import requests
 import lxml.html 
+import sys
 
-# @click.command()
-# @click.argument("url")
-# @click.argument("xpath")
+def items_path(xpath, url):
+    try:
+        str_html = lxml.html.fromstring(store_content(url))
+        items = str_html.xpath(xpath)
+        return items
+    except:
+        sys.exit("Invalid xpath.")
 
-url = "https://www.leroymerlin.pl/ogrzewanie/kominy-i-odprowadzanie-spalin,a2031.html"
-resp = requests.get(url)
+def store_content(url):
+    resp = requests.get(url)
+    if resp.ok:
+        content = resp.text
+        return content
+    else:
+        sys.exit("Invalid url.")
 
-with open("Small_projects/website_item_lister/test.html", "wb") as html:
-    html.write(resp.content)
+def format_items(items):
+    items = [item.text_content() for item in items]
+    return [item.strip().replace("\n", " ") for item in items]
 
-with open("Small_projects/website_item_lister/test.html", encoding="utf-8") as stream:
-    content = stream.read()
+def print_list(f_items):
+    print()
+    print("----------------------------------------------------------------")
+    for item in f_items:
+        print(item)
 
-str_html = lxml.html.fromstring(content)
-items = str_html.xpath('//*[@id="product-listing"]/div/a/h3')
+def main():
+    url = input("Enter you link: ")
+    xpath = input("Enter the xpath: ")
+    items = items_path(xpath, url)
+    f_items = format_items(items)
+    print_list(f_items)
 
-for item in items:
-    print(item.text_content())
+if __name__ == "__main__":
+    main()
+
