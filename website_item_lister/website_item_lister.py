@@ -29,7 +29,7 @@ def print_list(f_items):
         print(item)
 
 def main():
-    url = input("Enter you link: ")
+    url = input("Enter your link: ")
     xpath = input("Enter the xpath: ")
     items = items_path(xpath, url)
     f_items = format_items(items)
