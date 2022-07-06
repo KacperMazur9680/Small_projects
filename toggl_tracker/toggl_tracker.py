@@ -1,6 +1,6 @@
 import csv
 
-TRACK_FILE = "M06/track.csv"
+TRACK_FILE = "./toggl_tracker/track.csv"
 
 class Entry:
     def __init__(self, desc: str, time: int, tags: list[str]) -> None:
