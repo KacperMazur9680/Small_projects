@@ -29,17 +29,17 @@ while pencils > 0:
     if name == "Jack":
         print("Jack's turn:")
         if pencils % 2 == 0:
-            win = pencils
+            even_num = pencils
         else:
-            win = pencils + 1
-        for strat in range(1, win, 4):
-            if strat == pencils and pencils > 2:
+            even_num = pencils + 1
+        for losing_num in range(1, even_num, 4):
+            if losing_num == pencils and pencils > 2:
                 rm = randint(1, 3)
-            elif strat + 1 == pencils:
+            elif losing_num + 1 == pencils:
                 rm = 1
-            elif strat + 2 == pencils:
+            elif losing_num + 2 == pencils:
                 rm = 2            
-            elif strat + 3 == pencils:
+            elif losing_num + 3 == pencils:
                 rm = 3
             else:
                 rm = 1
