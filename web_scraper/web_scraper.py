@@ -60,7 +60,7 @@ def checking_for_old_artcls(num_pages):
 
 
 def save_articles(num, title, content):
-    """Saves the articles of each page in a directory named Page_x"""
+    """Saves the articles in a directory named Page_x"""
 
     dir_path = os.path.abspath(f"Small_projects/web_scraper/Page_{num}")
 
@@ -76,7 +76,7 @@ def save_articles(num, title, content):
 
 
 def find_articles(num_pages, article_type):
-    """Returns a list of found articles"""
+    """Finds the requested articles"""
 
     checking_for_old_artcls(num_pages)
 
