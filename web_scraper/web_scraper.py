@@ -3,13 +3,17 @@ from bs4 import BeautifulSoup
 import string
 import os
 import sys
+import shutil
 
 
 def article_website(link):
     """Returns a parsed html element"""
+
     article = link.find_previous("a") 
+
     article_link = "https://www.nature.com" + article.get("href")
     source = requests.get(article_link)
+
     if source.status_code == 200:
         return BeautifulSoup(source.content, "html.parser")
     else:
@@ -45,28 +49,39 @@ def articles_content(article):
     return title, content
 
 
+def checking_for_old_artcls(num_pages):
+    """Deletes old articles before the new one are found"""
+
+    for num in range(1, num_pages+1):
+        path = os.path.abspath("Small_projects/web_scraper/")
+        for file in os.listdir(path):
+            if file.startswith("Page_"):
+                shutil.rmtree(f"{path}/{file}")
+
+
 def save_articles(num, title, content):
     """Saves the articles of each page in a directory named Page_x"""
 
-    dir_name = os.path.abspath(f"Small_projects/web_scraper/Page_{num}")
+    dir_path = os.path.abspath(f"Small_projects/web_scraper/Page_{num}")
 
     try:
-        os.mkdir(dir_name)
+        os.mkdir(dir_path)
 
-        with open(f"{dir_name}/" + title + ".txt", "wb") as stream:
+        with open(f"{dir_path}/" + title + ".txt", "wb") as stream:
             stream.write(content.encode('UTF-8'))
+
     except FileExistsError:
-        with open(f"{dir_name}/" + title + ".txt", "ab") as stream:
+        with open(f"{dir_path}/" + title + ".txt", "ab") as stream:
             stream.write(content.encode('UTF-8'))
 
 
 def find_articles(num_pages, article_type):
     """Returns a list of found articles"""
-    
+
+    checking_for_old_artcls(num_pages)
+
     for num in range(1, num_pages+1):
-
         url = f"https://www.nature.com/nature/articles?sort=PubDate&year=2020&page={num}"
-
         r = requests.get(url)
 
         if r.status_code == 200:
@@ -86,9 +101,9 @@ def find_articles(num_pages, article_type):
 def main():
     pages = int(input("How many pages to search: "))
     article_type = input("What type of article are you looking for: ")
+
     find_articles(pages, article_type)
 
 
 if __name__ == "__main__":
     main()
-
