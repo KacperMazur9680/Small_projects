@@ -57,7 +57,7 @@ def search_markt(brand, model, memory):
             soup = BeautifulSoup(markt.content, "html.parser")
             phone_names = soup.find_all("h2", {"class": "title"})
 
-            show_results(phone_names, model, memory)
+            show_results(phone_names, model, shop)
         
         else:
             print(f"Nope, status code = {markt.status_code}")
@@ -81,7 +81,7 @@ def search_euro(brand, model):
 
 def main():
     brand = "apple"  #input("Enter the brand of the smartphone: ")
-    model = "iphone 14"  #input("Enter the model of the smartphone: ")
+    model = "iphone 14 pro"  #input("Enter the model of the smartphone: ")
     memory = 128  #input("Enter the memory you are interested in [GB]: ")
 
     search_markt(brand, model, memory)
