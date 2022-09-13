@@ -1,6 +1,7 @@
 import sys
 from bs4 import BeautifulSoup
 import requests
+import re
 
 ALLOW_ACCESS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
 
@@ -73,6 +74,7 @@ def search_expert(brand, model, memory):
     shop = "Media Expert"
     model_f = model.replace(" ", "-").lower()
     pages_raw = requests.get(f"https://www.mediaexpert.pl/smartfony-i-zegarki/smartfony/pamiec-wbudowana-gb_{memory}/popularne-serie_{brand}-{model_f}")
+
     if pages_raw.status_code == 200:
         pages_soup = BeautifulSoup(pages_raw.content, "html.parser")
         pages_html = pages_soup.find("span", {"class": "from"})
@@ -86,32 +88,66 @@ def search_expert(brand, model, memory):
             print(media_expert(brand, model, memory, page))
             expert = requests.get(media_expert(brand, model, memory, page), headers={"User-Agent": ALLOW_ACCESS})
             soup = BeautifulSoup(expert.content, "html.parser")
-            phone_list = {}
+
+            frst_phone = soup.find("div", {"class": "offers-list"})
+            frst_phone_name = frst_phone.find("h2", {"class": "name is-section"}).text.replace("\n", "").strip()
+
+            try:
+                frst_phone_price = int(frst_phone.find("div", {"class": "main-price is-big"}).find("span", {"class": "whole"}).text.replace(u"\u202f", ""))
+            except AttributeError:
+                continue
+
+            phone_names = []
+            phone_prices = []
+
+            if frst_phone_name and frst_phone_price:
+                phone_names.append(frst_phone_name)
+                phone_prices.append(frst_phone_price)
+
             for object in soup.find_all("span", {"whenvisible": "[object Object]"}):
-                phone_names = object.find_all("h2", {"class": "name is-section"})
-                phone_prices = object.find_all("span", {"class": "whole"})
+                phone_name = object.find("h2", {"class": "name is-section"})
 
-                names = [name.text.replace("\n", "").strip() for name in phone_names]
-                prices = []
+                try:
+                    phone_price = object.find("div", {"class": "main-price is-big"}).find("span", {"class": "whole"})
+                except:
+                    continue
 
-                for price in phone_prices:
-                    try:
-                        price_clean = int(price.text.replace(u"\u202f", ""))
-                    except AttributeError:
-                        continue 
+                phone_names.append(phone_name.text.replace("\n", "").strip())
+
+                try:
+                    phone_price = int(phone_price.text.replace(u"\u202f", ""))
+                except AttributeError:
+                    continue
+                else:
+                    phone_prices.append(phone_price)
+                
+            phones = dict(zip(phone_names, phone_prices))
+            model_list = []   
+            for key in phones.keys():
+                key_ = key.lower()
+                name_ = re.search(f"{model}(.*){memory}", key_)
+                model_ = name_.group(1)
+                if "iphone" in key_:
+                    if model_.strip() == "":
+                        model_list.append(f"Press ENTER for regular {model}")
                     else:
-                        prices.append(price_clean)
+                        model_list.append(model_.strip())
+                else:
+                    model_list.append(model_.strip() + str(memory) + "GB")
 
-                phones = dict(zip(names, prices))   
+            model_list = set(model_list)
 
-                for key, value in phones.items():
-                    if str(memory) in key:
-                        print(f"{key} => {value}")
+            models = ", ".join(model_list)
 
-                phone_list.update(phones)
+            model_spec = input(f"Which model would you like: [{models}]: ")
 
-            if len(phone_list) <= 0:
+            for key, value in phones.items():
+                if model_spec == re.search(f"{model}(.*){memory}", key.lower()).group(1).strip(): 
+                    print(f"{key} => {value}")
+                
+            if len(phones) <= 0:
                 print(f"{model} {memory} GB not found in {shop}")   
+
     else:
         print(f"ERROR {pages_raw.status_code}")
 
@@ -127,10 +163,10 @@ def search_euro(brand, model):
 
 def main():
     brand = "apple"  #input("Enter the brand of the smartphone: ")
-    model = "iphone 11"  #input("Enter the model of the smartphone: ")
+    model = "iphone 12"  #input("Enter the model of the smartphone: ")
     memory = 128  #input("Enter the memory you are interested in [GB]: ")
 
-    search_markt(brand, model, memory)
+    # search_markt(brand, model, memory)
     search_expert(brand, model, memory)
 
 if __name__ == "__main__":
