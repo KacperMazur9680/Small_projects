@@ -6,10 +6,6 @@ import re
 ALLOW_ACCESS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
 
 
-def neonet(brand, page):
-    return f"https://www.neonet.pl/smartfony-i-navi/smartfony/f/{brand}.html?p={page}"
-
-
 def media_markt(brand, model, memory):
     if memory > 128:
         memo = "128-01-gb-i-wiecej"
@@ -23,7 +19,7 @@ def media_markt(brand, model, memory):
         memo = ""
     return f"https://mediamarkt.pl/telefony-i-smartfony/smartfony/wszystkie-smartfony.{brand}/&pamiec-wbudowana={memo}&model={model}"
 
-def show_results_markt(phone_names, model, shop, memory):
+def show_results_markt(phone_names, model, memory):
     phones = {}
 
     for info in phone_names:
@@ -44,13 +40,14 @@ def show_results_markt(phone_names, model, shop, memory):
             print(f"{key} => {value}")
 
     if len(phones) <= 0:
-        print(f"{model} {memory} GB not found in {shop}")
+        print(f"{model} {memory} GB not found")
 
 def search_markt(brand, memory):
         print()
         shop = "Media Markt"
         print(shop)
-        model = input("Enter the specific model of the smartphone: ")
+        
+        model = input("Enter the SPECIFIC model of the smartphone (eg. galaxy a32 || galaxy z flip3 5g  || iphone 14 pro): ")
 
         model_f = model.replace(" ", "-").lower()
         print(media_markt(brand, model_f, memory))
@@ -60,7 +57,7 @@ def search_markt(brand, memory):
             soup = BeautifulSoup(markt.content, "html.parser")
             phone_names = soup.find_all("h2", {"class": "title"})
 
-            show_results_markt(phone_names, model, shop, memory)
+            show_results_markt(phone_names, model, memory)
         
         else:
             print(f"ERROR {markt.status_code}")
@@ -98,20 +95,25 @@ def search_expert_phones(soup, frst_phone_name, frst_phone_price):
         
     return phone_names, phone_prices
 
-def list_of_models_expert(phones, model, memory):
+def list_of_models_expert_or_euro(phones, model, memory):
     
     model_list = []   
     for key in phones.keys():
         key_ = key.lower()
         name_ = re.search(f"{model}(.*){memory}", key_)
-        model_ = name_.group(1)
-        if "iphone" in key_:
-            if model_.strip() == "":
-                model_list.append(f"Press ENTER for regular {model}")
+        try:
+            model_ = name_.group(1)
+        except AttributeError:
+            print(f"{model} {memory} GB not found")
+            sys.exit(1)
+        else:    
+            if "iphone" in key_:
+                if model_.strip() == "":
+                    model_list.append(f"Press ENTER for regular {model}")
+                else:
+                    model_list.append(model_.strip())
             else:
-                model_list.append(model_.strip())
-        else:
-            model_list.append(model_.strip() + str(memory) + "GB")
+                model_list.append(model_.strip() + str(memory) + "GB")
 
     model_list = set(model_list)
 
@@ -119,7 +121,7 @@ def list_of_models_expert(phones, model, memory):
 
     return models
 
-def show_results_expert(phones, model_spec, model, memory, shop):
+def show_results_expert_or_euro(phones, model_spec, model, memory, shop):
     for key, value in phones.items():
         if "iphone" in key.lower():
             if model_spec == re.search(f"{model}(.*){memory}", key.lower()).group(1).strip():
@@ -135,7 +137,7 @@ def search_expert(brand, memory):
     shop = "Media Expert"
     print()
     print(shop)
-    model = input("Enter the general model (eg. samsung s || a || fold): ")
+    model = input("Enter the GENERAL model (eg. samsung s || a || fold): ")
 
     model_f = model.replace(" ", "-").lower()
     pages_raw = requests.get(f"https://www.mediaexpert.pl/smartfony-i-zegarki/smartfony/pamiec-wbudowana-gb_{memory}/popularne-serie_{brand}-{model_f}")
@@ -166,11 +168,11 @@ def search_expert(brand, memory):
             
             phones = dict(zip(phone_names, phone_prices))
 
-            models = list_of_models_expert(phones, model, memory)
+            models = list_of_models_expert_or_euro(phones, model, memory)
 
             model_spec = input(f"Which model would you like: {brand} {model} [{models}]: ")
 
-            show_results_expert(phones, model_spec, model, memory, shop)
+            show_results_expert_or_euro(phones, model_spec, model, memory, shop)
 
     else:
         print(f"ERROR {pages_raw.status_code}")
@@ -184,7 +186,7 @@ def search_euro(memory):
     shop = "RTV Euro AGD"
     print()
     print(shop)
-    model = "redmi" #input("Enter the general model (eg. samsung s || z flip || fold): ")
+    model = input("Enter the GENERAL model (eg. samsung s || z flip || fold / iphone x || 10): ")
 
     model_f = model.replace(" ", "-").lower()
     pages_raw = requests.get(f"https://www.euro.com.pl/telefony-komorkowe,pamiec-wbudowana-gb-!-{memory},seria!{model_f}.bhtml")
@@ -201,24 +203,48 @@ def search_euro(memory):
         for page in range(1, pages + 1):
             print(rtv_euro(model, memory, page))
 
-            euro = requests.get(rtv_euro)
+            euro = requests.get(rtv_euro(model, memory, page), headers={"User-Agent": ALLOW_ACCESS})
             soup = BeautifulSoup(euro.content, "html.parser")
             
+            names = []
+            prices = []
+
+            for product in soup.find_all("div", {"class": "product-for-list"}):
+                name_raw = product.find("h2", {"class": "product-name"}).find("a", {"class": "js-save-keyword"})
+                price_raw = product.find("div", {"class": "price-normal selenium-price-normal"})
+                
+                try:
+                    name = name_raw.text.replace("\n", "").replace("\t", "")
+                    price = price_raw.text.replace("\n", "").replace("\t", "").replace("zł","").replace(u"\xa0", "")
+                except AttributeError:
+                    continue
+
+                names.append(name)
+                prices.append(int(price))
+
+            phones = dict(zip(names, prices))
+
+            models = list_of_models_expert_or_euro(phones, model, memory)
+
+            model_spec = input(f"Which model would you like: {model} [{models}]: ")
+
+            show_results_expert_or_euro(phones, model_spec, model, memory, shop)
+
+    else:
+        print(f"ERROR {pages_raw.status_code}")        
 
 
-def search_neonet(brand, model):
-    for page in range(4):
-        neonet_ = requests.get(neonet(brand, page))
+def search_shops():
+    memory = int(input("Enter the memory you are interested in [GB]: "))
+    brand = input("Enter the brand of the smartphone: ")
+    search_markt(brand, memory)
+    search_expert(brand, memory)
+    search_euro(memory)
 
 
 def main():
-    # brand = input("Enter the brand of the smartphone: ")
-    
-    memory = 128 #int(input("Enter the memory you are interested in [GB]: "))
+    search_shops()
 
-    # search_markt(brand, memory)
-    # search_expert(brand, memory)
-    search_euro(memory)
 
 if __name__ == "__main__":
     main()
