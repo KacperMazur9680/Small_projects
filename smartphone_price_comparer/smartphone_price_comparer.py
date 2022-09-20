@@ -1,4 +1,3 @@
-import sys
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -22,7 +21,7 @@ def media_markt(brand, model, memory):
 def show_results_markt(phone_names, model, memory):
     phones = {}
 
-    for info in phone_names:
+    for info in phone_names:   
         pricing = info.find_next("div", {"class": "pricing"})
         price_raw = pricing.find("span", {"class": "whole"})
 
@@ -34,7 +33,7 @@ def show_results_markt(phone_names, model, memory):
             price_clean = price_raw_clean.replace("\n", "").strip()
                     
         phones.update({info.text: price_clean})
-                
+
     for key, value in phones.items():
         if str(memory) in key:
             print(f"{key} => {value}")
@@ -47,7 +46,7 @@ def search_markt(brand, memory):
         shop = "Media Markt"
         print(shop)
         
-        model = input("Enter the SPECIFIC model of the smartphone (eg. galaxy a32 || galaxy z flip3 5g  || iphone 14 pro): ")
+        model = input("Enter the SPECIFIC model of the smartphone (eg. galaxy a52 || galaxy z flip3 5g  || iphone 14 pro): ")
 
         model_f = model.replace(" ", "-").lower()
         print(media_markt(brand, model_f, memory))
@@ -61,7 +60,7 @@ def search_markt(brand, memory):
         
         else:
             print(f"ERROR {markt.status_code}")
-            sys.exit(1)
+
 
 
 def media_expert(brand, model, memory, page):
@@ -101,17 +100,22 @@ def list_of_models_expert_or_euro(phones, model, memory):
     for key in phones.keys():
         key_ = key.lower()
         name_ = re.search(f"{model}(.*){memory}", key_)
+
         try:
             model_ = name_.group(1)
         except AttributeError:
             print(f"{model} {memory} GB not found")
-            sys.exit(1)
+            break
         else:    
+
             if "iphone" in key_:
+                model_ = model_.replace("\u200c", "")
                 if model_.strip() == "":
                     model_list.append(f"Press ENTER for regular {model}")
+
                 else:
                     model_list.append(model_.strip())
+
             else:
                 model_list.append(model_.strip() + str(memory) + "GB")
 
@@ -124,7 +128,7 @@ def list_of_models_expert_or_euro(phones, model, memory):
 def show_results_expert_or_euro(phones, model_spec, model, memory, shop):
     for key, value in phones.items():
         if "iphone" in key.lower():
-            if model_spec == re.search(f"{model}(.*){memory}", key.lower()).group(1).strip():
+            if model_spec == re.search(f"{model}(.*){memory}", key.lower()).group(1).strip().replace("\u200c", ""):
                 print(f"{key} => {value}") 
 
         elif model_spec == re.search(f"{model}(.*){memory}", key.lower()).group(1).strip() + f"{memory}GB":
@@ -133,11 +137,10 @@ def show_results_expert_or_euro(phones, model_spec, model, memory, shop):
     if len(phones) <= 0:
         print(f"{model} {memory} GB not found in {shop}") 
 
-def search_expert(brand, memory):
+def search_expert(model, brand, memory):
     shop = "Media Expert"
     print()
     print(shop)
-    model = input("Enter the GENERAL model (eg. samsung s || a || fold): ")
 
     model_f = model.replace(" ", "-").lower()
     pages_raw = requests.get(f"https://www.mediaexpert.pl/smartfony-i-zegarki/smartfony/pamiec-wbudowana-gb_{memory}/popularne-serie_{brand}-{model_f}")
@@ -182,11 +185,10 @@ def rtv_euro(model, memory, page):
     model_f = model.replace(" ", "-").lower()
     return f"https://www.euro.com.pl/telefony-komorkowe,pamiec-wbudowana-gb-!-{memory},seria!{model_f},strona-{page}.bhtml"
 
-def search_euro(memory):
+def search_euro(model, memory):
     shop = "RTV Euro AGD"
     print()
     print(shop)
-    model = input("Enter the GENERAL model (eg. samsung s || z flip || fold / iphone x || 10): ")
 
     model_f = model.replace(" ", "-").lower()
     pages_raw = requests.get(f"https://www.euro.com.pl/telefony-komorkowe,pamiec-wbudowana-gb-!-{memory},seria!{model_f}.bhtml")
@@ -226,6 +228,9 @@ def search_euro(memory):
 
             models = list_of_models_expert_or_euro(phones, model, memory)
 
+            if len(models) <= 0:
+                break
+
             model_spec = input(f"Which model would you like: {model} [{models}]: ")
 
             show_results_expert_or_euro(phones, model_spec, model, memory, shop)
@@ -238,8 +243,12 @@ def search_shops():
     memory = int(input("Enter the memory you are interested in [GB]: "))
     brand = input("Enter the brand of the smartphone: ")
     search_markt(brand, memory)
-    search_expert(brand, memory)
-    search_euro(memory)
+
+    print()
+
+    model = input("Enter the GENERAL model (eg. galaxy s || z flip || fold || iphone 14): ")
+    search_expert(model, brand, memory)
+    search_euro(model, memory)
 
 
 def main():
