@@ -20,7 +20,7 @@ def media_markt(brand, model, memory):
 
 def show_results_markt(phone_names, model, memory):
     phones = {}
-
+    findings = []
     for info in phone_names:   
         pricing = info.find_next("div", {"class": "pricing"})
         price_raw = pricing.find("span", {"class": "whole"})
@@ -36,10 +36,12 @@ def show_results_markt(phone_names, model, memory):
 
     for key, value in phones.items():
         if str(memory) in key:
-            print(f"{key} => {value}")
+            findings.append([key, value])
 
     if len(phones) <= 0:
-        print(f"{model} {memory} GB not found")
+        findings.append(f"{model} {memory} GB not found")
+
+    return findings
 
 def search_markt(brand, memory):
         print()
@@ -56,11 +58,10 @@ def search_markt(brand, memory):
             soup = BeautifulSoup(markt.content, "html.parser")
             phone_names = soup.find_all("h2", {"class": "title"})
 
-            show_results_markt(phone_names, model, memory)
+            return show_results_markt(phone_names, model, memory)
         
         else:
             print(f"ERROR {markt.status_code}")
-
 
 
 def media_expert(brand, model, memory, page):
@@ -126,16 +127,20 @@ def list_of_models_expert_or_euro(phones, model, memory):
     return models
 
 def show_results_expert_or_euro(phones, model_spec, model, memory, shop):
+    findings = []
+
     for key, value in phones.items():
         if "iphone" in key.lower():
             if model_spec == re.search(f"{model}(.*){memory}", key.lower()).group(1).strip().replace("\u200c", ""):
-                print(f"{key} => {value}") 
+                findings.append([key, value]) 
 
         elif model_spec == re.search(f"{model}(.*){memory}", key.lower()).group(1).strip() + f"{memory}GB":
-            print(f"{key} => {value}")
+            findings.append([key, value])
                 
     if len(phones) <= 0:
-        print(f"{model} {memory} GB not found in {shop}") 
+        findings.append(f"{model} {memory} GB not found in {shop}") 
+
+    return findings
 
 def search_expert(model, brand, memory):
     shop = "Media Expert"
@@ -175,7 +180,7 @@ def search_expert(model, brand, memory):
 
             model_spec = input(f"Which model would you like: {brand} {model} [{models}]: ")
 
-            show_results_expert_or_euro(phones, model_spec, model, memory, shop)
+            return show_results_expert_or_euro(phones, model_spec, model, memory, shop)
 
     else:
         print(f"ERROR {pages_raw.status_code}")
@@ -233,7 +238,7 @@ def search_euro(model, memory):
 
             model_spec = input(f"Which model would you like: {model} [{models}]: ")
 
-            show_results_expert_or_euro(phones, model_spec, model, memory, shop)
+            return show_results_expert_or_euro(phones, model_spec, model, memory, shop)
 
     else:
         print(f"ERROR {pages_raw.status_code}")        
@@ -242,7 +247,7 @@ def search_euro(model, memory):
 def search_shops():
     memory = int(input("Enter the memory you are interested in [GB]: "))
     brand = input("Enter the brand of the smartphone: ")
-    search_markt(brand, memory)
+    print(search_markt(brand, memory))
 
     print()
 
