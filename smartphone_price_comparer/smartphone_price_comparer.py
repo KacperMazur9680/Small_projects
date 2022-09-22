@@ -1,9 +1,12 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+import xlsxwriter
 
 ALLOW_ACCESS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
 
+col = 0
+row = 0
 
 def media_markt(brand, model, memory):
     if memory > 128:
@@ -18,9 +21,13 @@ def media_markt(brand, model, memory):
         memo = ""
     return f"https://mediamarkt.pl/telefony-i-smartfony/smartfony/wszystkie-smartfony.{brand}/&pamiec-wbudowana={memo}&model={model}"
 
-def show_results_markt(phone_names, model, memory):
+def info_from_markt(phone_names, model, memory, brand):
     phones = {}
     findings = []
+    link = media_markt(brand, model, memory)
+
+    findings.append([link, "Media Markt"])
+
     for info in phone_names:   
         pricing = info.find_next("div", {"class": "pricing"})
         price_raw = pricing.find("span", {"class": "whole"})
@@ -30,7 +37,7 @@ def show_results_markt(phone_names, model, memory):
         except AttributeError:
             continue 
         else:
-            price_clean = price_raw_clean.replace("\n", "").strip()
+            price_clean = int(price_raw_clean.replace("\n", "").strip())
                     
         phones.update({info.text: price_clean})
 
@@ -58,7 +65,7 @@ def search_markt(brand, memory):
             soup = BeautifulSoup(markt.content, "html.parser")
             phone_names = soup.find_all("h2", {"class": "title"})
 
-            return show_results_markt(phone_names, model, memory)
+            return info_from_markt(phone_names, model, memory, brand)
         
         else:
             print(f"ERROR {markt.status_code}")
@@ -95,7 +102,7 @@ def search_expert_phones(soup, frst_phone_name, frst_phone_price):
         
     return phone_names, phone_prices
 
-def list_of_models_expert_or_euro(phones, model, memory):
+def list_from_models_expert_or_euro(phones, model, memory):
     
     model_list = []   
     for key in phones.keys():
@@ -126,8 +133,15 @@ def list_of_models_expert_or_euro(phones, model, memory):
 
     return models
 
-def show_results_expert_or_euro(phones, model_spec, model, memory, shop):
+def info_expert_or_euro(phones, model_spec, model, memory, shop, page, brand=""):
+    if shop == "Media Expert":
+        link = media_expert(brand, model, memory, page)
+    else:
+        link = rtv_euro(model, memory, page)
+
     findings = []
+    
+    findings.append([link, shop])
 
     for key, value in phones.items():
         if "iphone" in key.lower():
@@ -176,11 +190,11 @@ def search_expert(model, brand, memory):
             
             phones = dict(zip(phone_names, phone_prices))
 
-            models = list_of_models_expert_or_euro(phones, model, memory)
+            models = list_from_models_expert_or_euro(phones, model, memory)
 
             model_spec = input(f"Which model would you like: {brand} {model} [{models}]: ")
 
-            return show_results_expert_or_euro(phones, model_spec, model, memory, shop)
+            return info_expert_or_euro(phones, model_spec, model, memory, shop, page, brand="")
 
     else:
         print(f"ERROR {pages_raw.status_code}")
@@ -231,33 +245,61 @@ def search_euro(model, memory):
 
             phones = dict(zip(names, prices))
 
-            models = list_of_models_expert_or_euro(phones, model, memory)
+            models = list_from_models_expert_or_euro(phones, model, memory)
 
             if len(models) <= 0:
                 break
 
             model_spec = input(f"Which model would you like: {model} [{models}]: ")
 
-            return show_results_expert_or_euro(phones, model_spec, model, memory, shop)
+            return info_expert_or_euro(phones, model_spec, model, memory, shop, page, brand="")
 
     else:
         print(f"ERROR {pages_raw.status_code}")        
 
 
-def search_shops():
+def add_to_worksheet(list, worksheet):
+    global row
+    global col
+
+    try:
+        for phone_name, phone_price in list:
+            worksheet.write(row, col, phone_name)
+            worksheet.write(row, col + 1, phone_price)
+            row += 1
+    except TypeError:
+        worksheet.write(row, col, "")
+        row += 1
+    finally:
+        worksheet.write(row, col, "")
+        row += 1
+
+def save_search_excel(filename):
+    workbook = xlsxwriter.Workbook(f"./smartphone_price_comparer/excel_files/{filename}.xlsx")
+    worksheet = workbook.add_worksheet()
+    worksheet.set_column(0, 0, 65)
+
     memory = int(input("Enter the memory you are interested in [GB]: "))
     brand = input("Enter the brand of the smartphone: ")
-    print(search_markt(brand, memory))
+    list_markt = search_markt(brand, memory)
+
+    add_to_worksheet(list_markt, worksheet)
 
     print()
 
     model = input("Enter the GENERAL model (eg. galaxy s || z flip || fold || iphone 14): ")
-    search_expert(model, brand, memory)
-    search_euro(model, memory)
+    list_expert = search_expert(model, brand, memory)
+    add_to_worksheet(list_expert, worksheet)
+
+    list_euro = search_euro(model, memory)
+    add_to_worksheet(list_euro, worksheet)
+
+    workbook.close()
 
 
 def main():
-    search_shops()
+    filename = input("Enter the excel filename: ")
+    save_search_excel(filename)
 
 
 if __name__ == "__main__":
