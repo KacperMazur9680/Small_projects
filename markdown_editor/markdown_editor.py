@@ -36,6 +36,30 @@ def link():
     url = input("URL: ")
     return f"[{label}]({url})"
 
+def listing(format, f_texts):
+    info = []
+    if f_texts:
+        info.append("\n")
+
+    while True:
+        rows = int(input("Number of rows: "))
+
+        if rows > 0:
+            for row in range(1, rows + 1):
+                text = input(f"Row #{row}: ")
+                if format == "ordered-list": 
+                    info.append(f"{row}. {text}\n")
+                else:
+                    info.append(f"* {text}\n")
+            
+            return info
+            
+        else:
+            print("The number of rows should be greater than zero")
+            pass
+
+            
+
 f_texts = []
 counter = 0
 
@@ -51,6 +75,9 @@ Special commands: !help !done""")
         continue
     
     if format == "!done":
+        with open("./markdown_editor/output.md", "w") as stream:
+            for text in f_texts:
+                stream.write(text)
         break
         
     if format in FORMATTERS:
@@ -66,12 +93,18 @@ Special commands: !help !done""")
             f_texts.append(inline())
         elif format == "link":
             f_texts.append(link())
+        elif format == "ordered-list" or format == "unordered-list":
+            for info in listing(format, f_texts):
+                f_texts.append(info)
+
         else:
             f_texts.append("\n")
-        for text in f_texts:
-            print(text, end="")
+
     else:
         print("Unknown formatting type or command")
         pass
     
     counter = 1
+    
+    for text in f_texts:
+        print(text, end="")
