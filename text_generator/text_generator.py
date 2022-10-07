@@ -1,3 +1,4 @@
+from collections import Counter
 import nltk
 # nltk.download()
 
@@ -9,22 +10,23 @@ with open(FILENAME, "r", encoding="utf-8") as f:
 tokens = nltk.regexp_tokenize(content, r"[^\s]+")
 bigrams = list(nltk.bigrams(tokens))
 
-print(f"Number of bigrams: {len(bigrams)}")
-print()
+head_tails = {}
+for head, tail in bigrams:
+    head_tails.setdefault(head, []).append(tail)
 
 while True:
-    word = input()
-    if word == "exit":
+    head = input()
+    if head == "exit":
         break
     try:
-        word_index = int(word)
-        if word_index == -1:
-            print(f"Head: {tokens[word_index - 1]}\tTail: {tokens[word_index]}")
-        else:
-            print(f"Head: {tokens[word_index]}\tTail: {tokens[word_index + 1]}")
+        reps = dict(Counter(head_tails[head]))
     except TypeError:
-            print("Type Error. Please input an integer.")
-    except IndexError:
-            print("Index Error. Please input an integer that is in the range of the corpus.")
+            print("Type Error. Please input a string.")
+    except KeyError:
+            print("Key Error. The requested word is not in the model. Please input another word.")
     except ValueError:
-            print("Value error. Please input an integer.")
+            print("Value error. Please input a string.")
+    else:
+        print(f"Head: {head}")
+        for word, rep in reps.items():
+            print(f"Tail: {word}\tCount: {rep}")
