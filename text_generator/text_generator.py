@@ -3,58 +3,71 @@ import nltk
 # nltk.download()
 import random
 
-FILENAME = "./text_generator/data/corpus.txt"
-PUNC = "?!,."
 
-
-with open(FILENAME, "r", encoding="utf-8") as f:
-    content = f.read()
-
-tokens = nltk.regexp_tokenize(content, r"[^\s]+")
-bigrams = list(nltk.bigrams(tokens))
-
-head_tails = {}
-for head, tail in bigrams:
-    head_tails.setdefault(head, []).append(tail)
-
-words_in_sentence = 4
-sentences = 10
-
-for s in range(sentences):
-    text = ""
-    w = 0
-    while True:
-        head = random.choice(list(head_tails.keys()))
-        if head[0].isupper() and head[-1] not in PUNC:
-            text += f"{head} "
-            break
+class Words_Generator:
+    def __init__(self, filename):
+        self.filename = filename
+        self.punc = "?!."
+        self.head_tails = dict()
     
-    while w < words_in_sentence:
-        reps = dict(Counter(head_tails[head]))
-        most_propable = []
+    def tokenize(self):
+        with open(self.filename, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.tokens = nltk.regexp_tokenize(content, r"[^\s]+")
 
-        for key, value in reps.items():
-            if value == max(list(reps.values())):
-                most_propable.append(key)
+        return self.tokens
 
-        head = random.choice(most_propable)
-        text += f"{head} "
+    def get_trigram(self):
+        self.trigrams = list(nltk.trigrams(self.tokens))
+        return self.trigrams
 
-        w += 1
-    
-    if text[-2] not in PUNC:
-        while True:
-            reps = dict(Counter(head_tails[head]))
+    def get_head_tail(self):
+        for head1, head2, tail in self.trigrams:
+            head = f"{head1} {head2}"
+            self.head_tails.setdefault(head, []).append(tail)
+
+        return self.head_tails
+
+    def generate_sentences(self, sentences, min_words):
+        min_words -= 2
+        def predict_words(head):
+            reps = dict(Counter(self.head_tails[head]))
             most_propable = []
 
             for key, value in reps.items():
                 if value == max(list(reps.values())):
                     most_propable.append(key)
 
-            head = random.choice(most_propable)
-            text += f"{head} "
+            self.head = head.split()[1] + " " + random.choice(most_propable)
+            self.text += f"{self.head.split()[1]} "
+            return self.text
 
-            if text[-2] in PUNC:
-                break
+        for s in range(sentences):
+            self.text = ""
+            w = 0
+            while True:
+                self.head = random.choice(list(self.head_tails.keys()))
+                sub_head = self.head.split()
+                if self.head[0].isupper() and sub_head[0][-1] not in self.punc:
+                    self.text += f"{self.head} "
+                    break
+            
+            while w < min_words:
+                predict_words(self.head)
+                w += 1
+            
+            if self.text[-2] not in self.punc:
+                while True:
+                    predict_words(self.head)
+                    if self.text[-2] in self.punc:
+                        break
+        
+            print(self.text)
 
-    print(text)
+
+if __name__ == "__main__":
+    generator = Words_Generator("./text_generator/data/corpus.txt")
+    generator.tokenize()
+    generator.get_trigram()
+    generator.get_head_tail()
+    generator.generate_sentences(10, 5)
