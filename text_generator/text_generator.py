@@ -65,9 +65,13 @@ class Words_Generator:
             print(self.text)
 
 
-if __name__ == "__main__":
+def main():
     generator = Words_Generator("./text_generator/data/corpus.txt")
     generator.tokenize()
     generator.get_trigram()
     generator.get_head_tail()
     generator.generate_sentences(10, 5)
+
+
+if __name__ == "__main__":
+    main()
