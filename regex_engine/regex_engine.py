@@ -6,13 +6,17 @@ class Regex_Engine:
         self.out = bool()
 
     def compare(self):
-        if self.regex == "" or self.regex == ".":
-            value = True
-        elif self.regex == self.terminal_input:
-            value = True
-        else: 
-            value = False
-        self.out = value
+        def recursive_regex(r, t):
+            if r == "":
+                return True
+            if len(r) != len(t):
+                return False
+            if r[0] != "." and r[0] != t[0]:
+                return False
+            
+            return recursive_regex(r[1:], t[1:])
+
+        self.out = recursive_regex(self.regex, self.terminal_input)
         return self.out
 
     def output(self):
@@ -25,6 +29,7 @@ def main():
     engine = Regex_Engine(regex_input)
     engine.compare()
     engine.output()
-
+    
+    
 if __name__ == "__main__":
     main()
