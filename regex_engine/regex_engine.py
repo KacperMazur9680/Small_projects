@@ -6,17 +6,25 @@ class Regex_Engine:
         self.out = bool()
 
     def compare(self):
-        def recursive_regex(r, t):
+        def check_eq_len(r, t):
+            print(r, t)
             if r == "":
                 return True
-            if len(r) != len(t):
+            if t == "":
                 return False
             if r[0] != "." and r[0] != t[0]:
-                return False
+                return False    
+            return check_eq_len(r[1:], t[1:])        
             
-            return recursive_regex(r[1:], t[1:])
+        def invoke_check(r, t):
+            for i in range(0, len(t) - len(r) + 1):
+                print(i)
+                if check_eq_len(r , t[i:]):
+                    return True
+            else:
+                return False
 
-        self.out = recursive_regex(self.regex, self.terminal_input)
+        self.out = invoke_check(self.regex, self.terminal_input)
         return self.out
 
     def output(self):
@@ -24,7 +32,7 @@ class Regex_Engine:
 
 
 def main():
-    regex_input = input()
+    regex_input = input("Enter a 'pattern|string_to_compare' input: ")
 
     engine = Regex_Engine(regex_input)
     engine.compare()
