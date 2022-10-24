@@ -7,7 +7,6 @@ class Regex_Engine:
 
     def compare(self):
         def check_eq_len(r, t):
-            print(r, t)
             if r == "":
                 return True
             if t == "":
@@ -18,7 +17,6 @@ class Regex_Engine:
             
         def invoke_check(r, t):
             for i in range(0, len(t) - len(r) + 1):
-                print(i)
                 if check_eq_len(r , t[i:]):
                     return True
             else:
