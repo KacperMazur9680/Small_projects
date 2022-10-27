@@ -11,13 +11,19 @@ class Regex_Engine:
         def consume(r, t):
             if r == "":
                 return True
+
+            if "?" in r:
+                if r[1:2] == "?" and (r[0] != t[0] or r[0] == "."):
+                    r = r.replace(r[:2], "")
+                if r[1:2] == "?" and r[0] == t[0]:
+                    r = r.replace("?", "")
+                return consume(r[1:], t[1:])
+
+            if r[0] != "." and r[0] != t[0]:
+                return False
             if len(t) != len(r):
                 return False
-            if t == "":
-                return False
-            if r[0] != "." and r[0] != t[0]:
-                return False 
-            return consume(r[1:], t[1:])        
+            return consume(r[1:], t[1:])
             
         def invoke_check(r, t):
             len_r = len(r) - 1
