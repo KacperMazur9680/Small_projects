@@ -17,6 +17,11 @@ class Test_Regex(unittest.TestCase):
         self.assertEqual(Regex_Engine("^le|apple").compare(), False)
         self.assertEqual(Regex_Engine("a|a").compare(), True)
         self.assertEqual(Regex_Engine(".h|ho").compare(), False)
+        self.assertEqual(Regex_Engine("colo.?r|colour").compare(), True)
+        self.assertEqual(Regex_Engine("colou?r|colour").compare(), True)
+        self.assertEqual(Regex_Engine("colou?r|color").compare(), True)
+        self.assertEqual(Regex_Engine("colo.?r|color").compare(), True)
+        
 
 
 if __name__ == "__main__":
