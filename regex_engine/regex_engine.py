@@ -1,3 +1,5 @@
+import sys
+
 class Regex_Engine:
     def __init__(self, regex_input):
         regex, terminal_input = regex_input.split("|")
@@ -7,12 +9,9 @@ class Regex_Engine:
 
     def compare(self):
         def consume(r, t):
-            print(r , t)
             if r == "":
                 return True
-            if r == "$" and t == "":
-                return True
-            if r == "$" and t != "":
+            if len(t) != len(r):
                 return False
             if t == "":
                 return False
@@ -20,33 +19,16 @@ class Regex_Engine:
                 return False 
             return consume(r[1:], t[1:])        
             
-        def invoke_check(r, t): 
+        def invoke_check(r, t):
+            len_r = len(r) - 1
+            if r.startswith("^") and r.endswith("$"):
+                return consume(r[1:-1], t)
             if r.startswith("^"):
-                r = r.replace("^", "")   
-                if r[0] != t[0]:
-                    return False
-                for i in range(0, len(t) + len(r)):
-                    # print(i)
-                    if consume(r , t[i:]):
-                        return True
-                else:
-                    return False
+                return consume(r[1:], t[:len_r])
+            if r.endswith("$"):
+                return consume(r[:-1], t[-len_r:])
 
-            elif r.endswith("$"):
-                for i in range(0, len(t) + len(r)):
-                    # print(i)
-                    if consume(r, t[i:]):
-                        return True
-                else:
-                    return False
-            
-            else:                  
-                for i in range(0, len(t) - len(r) + 1):
-                    # print(i)
-                    if consume(r , t[i:]):
-                        return True
-                else:
-                    return False
+            return consume(r, t)
 
         self.out = invoke_check(self.regex, self.terminal_input)
         return self.out
@@ -56,6 +38,7 @@ class Regex_Engine:
 
 
 def main():
+    sys.setrecursionlimit(10000)
     regex_input = input()
 
     engine = Regex_Engine(regex_input)
