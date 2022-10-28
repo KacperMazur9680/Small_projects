@@ -17,7 +17,7 @@ class Test_Regex(unittest.TestCase):
         self.assertEqual(Regex_Engine("^le|apple").compare(), False)
         self.assertEqual(Regex_Engine("a|a").compare(), True)
         self.assertEqual(Regex_Engine(".h|ho").compare(), False)
-        
+
         self.assertEqual(Regex_Engine("colo.?r|colour").compare(), True)
         self.assertEqual(Regex_Engine("colou?r|colour").compare(), True)
         self.assertEqual(Regex_Engine("colou?r|colouur").compare(), False)
@@ -38,8 +38,17 @@ class Test_Regex(unittest.TestCase):
         self.assertEqual(Regex_Engine("colou+r|colour").compare(), True)
         self.assertEqual(Regex_Engine("colou+r|colouuuur").compare(), True)
         self.assertEqual(Regex_Engine("col.+r|color").compare(), True)
-        self.assertEqual(Regex_Engine("col.+r|colour").compare(), True)
         self.assertEqual(Regex_Engine("col.+r|colr").compare(), False)
+
+        self.assertEqual(Regex_Engine("\.$|end.").compare(), True)
+        self.assertEqual(Regex_Engine("3\+3|3+3=6").compare(), True)
+        self.assertEqual(Regex_Engine("\?|Is this working?").compare(), True)
+        self.assertEqual(Regex_Engine("\\\\|\\").compare(), True)
+        self.assertEqual(Regex_Engine("colou\?r|color").compare(), False)
+        self.assertEqual(Regex_Engine("colou\?r|colour").compare(), False)
+
+        self.assertEqual(Regex_Engine("^n.+pe$|nooooooope").compare(), True)
+        self.assertEqual(Regex_Engine("^n.+p$|nooooooope").compare(), False)
 
         
         
