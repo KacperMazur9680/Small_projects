@@ -17,12 +17,33 @@ class Test_Regex(unittest.TestCase):
         self.assertEqual(Regex_Engine("^le|apple").compare(), False)
         self.assertEqual(Regex_Engine("a|a").compare(), True)
         self.assertEqual(Regex_Engine(".h|ho").compare(), False)
+        
         self.assertEqual(Regex_Engine("colo.?r|colour").compare(), True)
         self.assertEqual(Regex_Engine("colou?r|colour").compare(), True)
+        self.assertEqual(Regex_Engine("colou?r|colouur").compare(), False)
         self.assertEqual(Regex_Engine("colou?r|color").compare(), True)
         self.assertEqual(Regex_Engine("colo.?r|color").compare(), True)
-        
 
+        self.assertEqual(Regex_Engine("colou*r|color").compare(), True)
+        self.assertEqual(Regex_Engine("colou*r|colour").compare(), True)
+        self.assertEqual(Regex_Engine("colou*r|colouuuur").compare(), True)
+        self.assertEqual(Regex_Engine("col.*r|color").compare(), True)
+        self.assertEqual(Regex_Engine("col.*r|colour").compare(), True)
+        self.assertEqual(Regex_Engine("col.*r|colr").compare(), True)
+        self.assertEqual(Regex_Engine("col.*r|collar").compare(), True)
+        self.assertEqual(Regex_Engine("col.*r$|colors").compare(), False)
+        self.assertEqual(Regex_Engine("kol.*r$|colors").compare(), False)
+
+        self.assertEqual(Regex_Engine("colou+r|color").compare(), False)
+        self.assertEqual(Regex_Engine("colou+r|colour").compare(), True)
+        self.assertEqual(Regex_Engine("colou+r|colouuuur").compare(), True)
+        self.assertEqual(Regex_Engine("col.+r|color").compare(), True)
+        self.assertEqual(Regex_Engine("col.+r|colour").compare(), True)
+        self.assertEqual(Regex_Engine("col.+r|colr").compare(), False)
+
+        
+        
+        
 
 if __name__ == "__main__":
     unittest.main()
