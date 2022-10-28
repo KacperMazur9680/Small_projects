@@ -14,20 +14,20 @@ class Regex_Engine:
                 return True
             
             if "?" in r or "*" in r or "+" in r:
-                if r[1:2] == "?" and (r[0] != t[0] or r[0] == "."):
+                if r[1:2] == "?" and r[0] != "\\" and (r[0] != t[0] or r[0] == "."):
                     r = r.replace(r[0:2], "")
                     return consume(r[1:], t[1:])
 
-                if r[1:2] == "?" and r[0] == t[0]: 
+                if r[1:2] == "?" and r[0] != "\\" and r[0] == t[0]: 
                     r = r.replace(r[1], "")
                     return consume(r[1:], t[1:])
 
-                if r[1:2] == "*" and (r[0] == "." or r[0] != t[0]):
+                if r[1:2] == "*" and r[0] != "\\" and (r[0] == "." or r[0] != t[0]):
                     r = r.replace(r[0:2], "")
                     t = t[-1:]
                     return consume(r, t)
 
-                if (r[1:2] == "*" or r[1:2] == "+") and r[0] == t[0]:
+                if (r[1:2] == "*" or r[1:2] == "+") and r[0] != "\\" and r[0] == t[0]:
                     r = r.replace(r[1], "")
                     i = 0
                     for char in t:
@@ -36,7 +36,7 @@ class Regex_Engine:
                     t = t[i-1:]
                     return consume(r[1:], t[1:])
 
-                if r[1:2] == "+" and r[0] == "." and len(t) > 1:
+                if r[1:2] == "+" and r[0] != "\\" and r[0] == "." and len(t) > 1:
                     r = r.replace(r[0:2], "")
                     i = 0
                     for char in t:
@@ -46,37 +46,52 @@ class Regex_Engine:
 
                     return consume(r, t)                    
 
+                if r[0] == "\\":
+                    r = r.replace("\\", "")
+                
+                if r == "?" or r == "+" or r == "*" or r == ".":
+                    return True
 
                 if r[0:1] != "." and r[0:1] != t[0:1]:
                     return False
 
                 return consume(r[1:], t[1:])
 
-
+            if r[0] == "\\":
+                r = r.replace("\\", "")
+            if r == ".":
+                return True
             if r[0:1] != "." and r[0:1] != t[0:1]:
-                return False
-            if len(t) != len(r):
                 return False
             return consume(r[1:], t[1:])
             
         def invoke_check(r, t):
             len_r = len(r) - 1
+            if r == "\\\\":
+                return True
+                
             if r.startswith("^") and r.endswith("$"):
+                if len(t) != len(r[1:-1]) and "+" not in r and "*" not in r:
+                    return False
+                if r[-2] != t[-1]:
+                    return False
                 return consume(r[1:-1], t)
+
             if r.startswith("^"):
                 return consume(r[1:], t[:len_r])
+
             if r.endswith("$"):
                 return consume(r[:-1], t[-len_r:])
+
             if r in t or r == ".":
                 return True
-
             return consume(r, t)
 
         self.out = invoke_check(self.regex, self.terminal_input)
         return self.out
 
     def output(self):
-        print(f"Input: '{self.regex}|{self.terminal_input}'\tOutput: {self.out}")
+        print(self.out)
 
 
 def main():
