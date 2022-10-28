@@ -9,17 +9,51 @@ class Regex_Engine:
 
     def compare(self):
         def consume(r, t):
+            print(r, t) #-- shows the elimination process
             if r == "":
                 return True
-
-            if "?" in r:
+            
+            if "?" in r or "*" in r or "+" in r:
                 if r[1:2] == "?" and (r[0] != t[0] or r[0] == "."):
-                    r = r.replace(r[:2], "")
-                if r[1:2] == "?" and r[0] == t[0]:
-                    r = r.replace("?", "")
+                    r = r.replace(r[0:2], "")
+                    return consume(r[1:], t[1:])
+
+                if r[1:2] == "?" and r[0] == t[0]: 
+                    r = r.replace(r[1], "")
+                    return consume(r[1:], t[1:])
+
+                if r[1:2] == "*" and (r[0] == "." or r[0] != t[0]):
+                    r = r.replace(r[0:2], "")
+                    t = t[-1:]
+                    return consume(r, t)
+
+                if (r[1:2] == "*" or r[1:2] == "+") and r[0] == t[0]:
+                    r = r.replace(r[1], "")
+                    i = 0
+                    for char in t:
+                        if char == r[0]:
+                            i += 1
+                    t = t[i-1:]
+                    return consume(r[1:], t[1:])
+
+                if r[1:2] == "+" and r[0] == "." and len(t) > 1:
+                    r = r.replace(r[0:2], "")
+                    i = 0
+                    for char in t:
+                        if char == t[0]:
+                            i += 1
+                    t = t[i:]
+
+                    return consume(r, t)                    
+
+
+                if r[0:1] != "." and r[0:1] != t[0:1]:
+                    return False
+
                 return consume(r[1:], t[1:])
 
-            if r[0] != "." and r[0] != t[0]:
+
+            if r[0:1] != "." and r[0:1] != t[0:1]:
                 return False
             if len(t) != len(r):
                 return False
@@ -33,6 +67,8 @@ class Regex_Engine:
                 return consume(r[1:], t[:len_r])
             if r.endswith("$"):
                 return consume(r[:-1], t[-len_r:])
+            if r in t or r == ".":
+                return True
 
             return consume(r, t)
 
