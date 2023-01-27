@@ -10,13 +10,6 @@ error_dic = {"bus_id": 0,
              "stop_type": 0,
              "a_time": 0}
 
-bi_e = 0
-si_e = 0
-sn_e = 0
-ns_e = 0
-st_e = 0
-at_e = 0
-
 str_to_dict = json.loads(json_input)
 
 # Type checking:
