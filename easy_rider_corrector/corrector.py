@@ -52,7 +52,6 @@ for dic in str_to_dict:
                 result = re.match(pattern, string)
                 if result is None:
                     error_dic["stop_name"] += 1
-                    print(el[1])
             except TypeError:
                 pass
  
@@ -79,7 +78,22 @@ for dic in str_to_dict:
             except TypeError:
                 pass
 
-print("Type and required field validation:", sum(error_dic.values()), "errors")
+# Bus line info:
+bus_dic = {}
 
+print("Line names and number of stops:")
+for dic in str_to_dict:
+    for el in dic.items():
+        if el[0] == "bus_id":
+            if el[1] not in bus_dic.keys():
+                bus_dic.update({el[1]: 1})
+            else:
+                bus_dic[el[1]] += 1
+
+for k,v in bus_dic.items():
+    print(f"bus id: {k}, stops: {v}")
+
+
+print("\nType and required field validation:", sum(error_dic.values()), "errors")
 for k,v in error_dic.items():
-    print(k, v)
+    print(f"{k}: {v}")
