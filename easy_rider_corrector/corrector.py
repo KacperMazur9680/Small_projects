@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 
 json_input = input()
 
@@ -97,3 +98,60 @@ for k,v in bus_dic.items():
 print("\nType and required field validation:", sum(error_dic.values()), "errors")
 for k,v in error_dic.items():
     print(f"{k}: {v}")
+
+
+# Bus start-stops checker/shower:
+stop_dic = {128: {"S":"Prospekt Avenue", "F": "Sesame", "": "Elm Street"}}
+
+stop_dic = {}
+for dic in str_to_dict:
+    for el in dic.items():
+        if el[0] == "bus_id":
+            id = el[1]
+            if id not in stop_dic:
+                stop_dic.update({id:{}})
+
+        if el[0] == "stop_name":
+            s_name = el[1]
+
+        if el[0] == "stop_type":
+            s_type = el[1]
+            if s_type == "S" or s_type == "F":
+                stop_dic[id].update({s_type: s_name})
+            else:
+                if s_type not in stop_dic[id].keys():
+                    stop_dic[id].update({s_type:[s_name]})
+                else:
+                    stop_dic[id][s_type].append(s_name)
+
+for bus_id, bus_info in stop_dic.items():
+    if "S" not in bus_info or "F" not in bus_info:
+        print(f"There is no start or end stop for the line: {bus_id}")
+        sys.exit()
+
+start = set()
+trans = []
+stop = set()
+
+for info in stop_dic.values():
+    for el in info.items():
+        if el[0] == "S":
+            start.add(el[1])
+            trans.append(el[1])
+        elif el[0] == "F":
+            stop.add(el[1])
+            trans.append(el[1])
+        else:
+            for s_name in el[1]:
+                trans.append(s_name)
+
+
+for s_name in trans[:]:
+    if trans.count(s_name) == 1:
+        trans.remove(s_name)
+
+trans = set(trans)
+
+print(f"\nStart stops:", len(start), sorted(list(start)))
+print(f"Transfer stops:", len(trans), sorted(list(trans)))
+print(f"Finish stop:", len(stop), sorted(list(stop)))
