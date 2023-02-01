@@ -4,14 +4,14 @@ import sys
 
 json_input = input()
 
+str_to_dict = json.loads(json_input)
+
 error_dic = {"bus_id": 0,
              "stop_id": 0,
              "stop_name": 0,
              "next_stop": 0,
              "stop_type": 0,
              "a_time": 0}
-
-str_to_dict = json.loads(json_input)
 
 # Type checking:
 for dic in str_to_dict:
@@ -155,3 +155,35 @@ trans = set(trans)
 print(f"\nStart stops:", len(start), sorted(list(start)))
 print(f"Transfer stops:", len(trans), sorted(list(trans)))
 print(f"Finish stop:", len(stop), sorted(list(stop)))
+
+# Time checking:
+time_error = {}
+buses = []
+
+for dic in str_to_dict:
+    for el in dic.items():
+        if el[0] == "bus_id":
+            bus = el[1]
+            if bus not in buses:
+                buses.append(bus)
+                time = 0
+        if el[0] == "stop_name":
+            name = el[1]
+
+        if el[0] == "a_time":
+            s_time = int(el[1].replace(":",""))
+            if s_time > time:
+                time = el[1].replace(":","")
+                time = int(time)
+            else:
+                if bus not in time_error.keys():
+                    time_error.update({bus: name})
+                else:
+                    continue
+
+print("\nArrival time test:")
+if len(time_error) == 0:
+    print("OK")
+else:
+    for id, name in time_error.items():
+        print(f"bus_id line {id}: wrong time on station {name}")
