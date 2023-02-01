@@ -99,11 +99,9 @@ print("\nType and required field validation:", sum(error_dic.values()), "errors"
 for k,v in error_dic.items():
     print(f"{k}: {v}")
 
-
 # Bus start-stops checker/shower:
-stop_dic = {128: {"S":"Prospekt Avenue", "F": "Sesame", "": "Elm Street"}}
-
 stop_dic = {}
+
 for dic in str_to_dict:
     for el in dic.items():
         if el[0] == "bus_id":
@@ -187,3 +185,21 @@ if len(time_error) == 0:
 else:
     for id, name in time_error.items():
         print(f"bus_id line {id}: wrong time on station {name}")
+
+# Checking if on demand stops are not initial, transfer or final stops:
+full_list = list(start) + list(trans) + list(stop)
+demand_error = []
+
+for info in stop_dic.values():
+    for key, val in info.items():
+        if key == "O":
+            for el in val: 
+                if el in full_list:
+                    demand_error.append(el)
+
+demand_error = set(demand_error)
+
+if len(demand_error) == 0:
+    print("OK")
+else:
+    print(f"Wrong stop type: {sorted(list(demand_error))}")
