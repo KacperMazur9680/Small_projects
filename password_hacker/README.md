@@ -1,7 +1,7 @@
 ## Password hacker
 A program that connects to a server and hacks its password by: 
-* bruteforce, 
-* dictionary, 
+* brute force, 
+* dictionary-based brute force, 
 * vulnerability exploit, 
 * timed attack
 
