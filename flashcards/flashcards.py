@@ -1,31 +1,25 @@
+class Flashcards:
+    def __init__(self, num: int) -> None:
+        self.base = {}
+        self.num = num
+        
+        for i in range(self.num):
+            term = input(f"The term for card #{i+1}:\n")
+            defin = input(f"The definition for card #{i+1}:\n")
+            self.base.update({term:defin})
 
-
-
-class Flashcard:
-    def __init__(self, term: str, defin: str) -> None:
-        self.term = term
-        self.defin = defin
-    
-    def front(self) -> None:
-        print("Card:")
-        print(self.term)
-    
-    def back(self) -> None:
-        print("Definition:")
-        print(self.defin)
-
-    def compare(self, ans: str) -> None:
-        if self.defin == ans:
-            print("Correct")
-        else:
-            print("Wrong")
+    def compare(self) -> None:
+        for term, defin in self.base.items():
+            ans = input(f'Print the definition of "{term}":\n')
+            if ans == defin:
+                print("Correct!")
+            else:
+                print(f'Wrong. The right answer is "{defin}"')
 
 def main():
-    term = input() 
-    defin = input()
-    ans = input()
-    fc = Flashcard(term, defin)
-    fc.compare(ans) 
+    num = int(input("Input the number of cards:\n"))
+    fc = Flashcards(num)
+    fc.compare()
 
 if __name__ == "__main__":
     main()
