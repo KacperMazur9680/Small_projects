@@ -90,6 +90,24 @@ class Flashcards:
                 else:
                     break
 
+    def log(self) -> None:
+        """ ask the user where to save the log with the message 'File name:',
+        save all the lines that have been input in/output to the console to the file,
+        and print the message 'The log has been saved'. Don't clear the log after saving it to the file."""
+        pass
+    
+    def hardest(self) -> None:
+        """print a string that contains the term of the card with the highest number of wrong answers, 
+        for example, 'The hardest card is "term". You have N errors answering it.' 
+        If there are several cards with the highest number of wrong answers, 
+        print all of the terms: 'The hardest cards are "term_1", "term_2"'. 
+        If there are no cards with errors in the user's answers, print the message 'There are no cards with errors.'"""
+        pass
+    
+    def reset_stats(self) -> None:
+        """set the count of mistakes to 0 for all the cards and output the message 'Card statistics have been reset.'"""
+        pass
+
     def run(self, action: str) -> None:   
         action = action.lower()
         if action == "add":    
@@ -102,12 +120,17 @@ class Flashcards:
             self.export()
         if action == "ask":
             self.ask()
-
+        if action == "log":
+            self.log()
+        if action == "hardest card":
+            self.hardest()
+        if action == "reset stats":
+            self.reset_stats()
 
 def main():
     fc = Flashcards()
     while True:
-        action = input("Input the action (add, remove, import, export, ask, exit):\n")
+        action = input("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):\n")
 
         if action.lower() == "exit":
             print("Bye bye!")
