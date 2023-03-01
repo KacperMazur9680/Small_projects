@@ -1,5 +1,6 @@
 from io import StringIO
 from datetime import datetime
+import argparse
 
 class Flashcards:
     def __init__(self) -> None:
@@ -58,10 +59,13 @@ class Flashcards:
             print(f'Can\'t remove "{card}": there is no such card.\n')
             self.log_write(self.log_time(), f'Can\'t remove "{card}": there is no such card.')
 
-    def _import(self) -> None:
-        file = input("File name:\n")
-        self.log_write(self.log_time(), f'File name:')
-        self.log_write(self.log_time(), file)
+    def _import(self, outfile=False, outfilename="no_name_added") -> None:
+        if not outfile:
+            file = input("File name:\n")
+            self.log_write(self.log_time(), f'File name:')
+            self.log_write(self.log_time(), file)
+        else:
+            file = outfilename
 
         try:
             with open("./flashcards/" + file, "r") as stream:
@@ -85,10 +89,13 @@ class Flashcards:
         print(f"{num} cards have been loaded.\n")
         self.log_write(self.log_time(), f'{num} cards have been loaded')
 
-    def export(self) -> None:
-        file = input("File name:\n")
-        self.log_write(self.log_time(), f'File name:')
-        self.log_write(self.log_time(), file)
+    def export(self, outfile=False, outfilename="no_name_added") -> None:
+        if not outfile:
+            file = input("File name:\n")
+            self.log_write(self.log_time(), f'File name:')
+            self.log_write(self.log_time(), file)
+        else:
+            file = outfilename
 
         num = 0
 
@@ -206,13 +213,23 @@ class Flashcards:
 
 def main():
     fc = Flashcards()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--import_from")
+    parser.add_argument("--export_to")
+    args = parser.parse_args()
+
+    if args.import_from:
+        fc._import(outfile=True, outfilename=args.import_from)
+        
     while True:
         action = input("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):\n")
         fc.log_write(fc.log_time(), "Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):")
         fc.log_write(fc.log_time(), action)
 
         if action.lower() == "exit":
-            print("Bye bye!")
+            print("Bye bye!\n")
+            if args.export_to:
+                fc.export(outfile=True, outfilename=args.export_to)
             break
         else:
             fc.run(action)
