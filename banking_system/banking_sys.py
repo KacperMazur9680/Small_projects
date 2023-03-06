@@ -6,13 +6,38 @@ class Bank:
         self.card_database = {}
         self.balance_database = {}
 
-    def create_card(self)  -> None:
+    def create_card(self) -> None:
+        def luhn_alg(numbers: str) -> str: 
+            list_nums = [num for num in numbers]
+            
+            multi_odd_id = []
+            for id, num in enumerate(list_nums):
+                if id % 2 == 0:
+                    multi_odd_id.append(int(num)*2)
+                else:
+                    multi_odd_id.append(int(num))
+
+            list_nums = [num-9 if num > 9 else num for num in multi_odd_id]
+
+            sum_nums = sum(list_nums)
+            checksum = 0
+            if sum_nums % 10 == 0:
+                return str(checksum)
+            else:
+                while True:
+                    if (sum_nums+checksum) % 10 == 0:
+                        return str(checksum)
+                    else:
+                        checksum += 1
+                
         bin = "400000"
         while True:
-            ident_vars = [str(randint(0,9)) for _ in range(10)]
-            acc_ident_and_checksum = "".join(ident_vars)
-            if acc_ident_and_checksum not in self.card_database:
-                card_num = bin + acc_ident_and_checksum
+            ident_vars = [str(randint(0,9)) for _ in range(9)]
+            acc_ident = "".join(ident_vars)
+            if acc_ident not in self.card_database:
+                card_num = bin + acc_ident
+                checksum = luhn_alg(card_num)
+                card_num += checksum
                 break
             else:
                 continue
