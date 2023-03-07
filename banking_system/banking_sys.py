@@ -1,8 +1,29 @@
 from random import randint
 from sys import exit
+import sqlite3
+
+# create connection to sqlite3 -- done
+# create a table if it doesnt exist -- done
+# add new card (new id, new number, pin, balance 0) -- todo
+# login to account (check if card number in DB and if the pin is same as in DB) -- todo
+# check balance (take balance from card number in DB) -- todo
+
+
 
 class Bank:
     def __init__(self) -> None:
+        conn = sqlite3.connect("Bank_cards_DB.s3db")
+        self.cursor = conn.cursor()
+        self.cursor.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='Bank_cards';")
+ 
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Bank_cards (
+        id int,
+        number varchar(16),
+        pin varchar(4),
+        balance int DEFAULT 0
+        );""")
+            
         self.card_database = {}
         self.balance_database = {}
 
@@ -43,6 +64,8 @@ class Bank:
                 continue
         
         card_pin = "".join([str(randint(0,9)) for _ in range(4)])
+
+
 
         self.card_database.update({card_num: card_pin})
         self.balance_database.update({card_num: 0})
