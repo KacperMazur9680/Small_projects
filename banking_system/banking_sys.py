@@ -4,28 +4,26 @@ import sqlite3
 
 # create connection to sqlite3 -- done
 # create a table if it doesnt exist -- done
-# add new card (new id, new number, pin, balance 0) -- todo
+# add new card (new id, new number, pin, balance 0) -- done
 # login to account (check if card number in DB and if the pin is same as in DB) -- todo
 # check balance (take balance from card number in DB) -- todo
+# conn.commit() and conn.close() before exit() -- done
 
 
 
 class Bank:
     def __init__(self) -> None:
-        conn = sqlite3.connect("Bank_cards_DB.s3db")
-        self.cursor = conn.cursor()
+        self.conn = sqlite3.connect("./banking_system/Bank_cards_DB.s3db")
+        self.cursor = self.conn.cursor()
         self.cursor.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='Bank_cards';")
  
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS Bank_cards (
-        id int,
-        number varchar(16),
-        pin varchar(4),
-        balance int DEFAULT 0
+        id INTEGER PRIMARY KEY,
+        number VARCHAR(16) UNIQUE,
+        pin VARCHAR(4),
+        balance INTEGER DEFAULT 0
         );""")
-            
-        self.card_database = {}
-        self.balance_database = {}
 
     def create_card(self) -> None:
         def luhn_alg(numbers: str) -> str: 
@@ -52,23 +50,31 @@ class Bank:
                         checksum += 1
                 
         bin = "400000"
+        self.cursor.execute("""SELECT number FROM Bank_cards""")
+        num_list = self.cursor.fetchall()
+        
         while True:
             ident_vars = [str(randint(0,9)) for _ in range(9)]
             acc_ident = "".join(ident_vars)
-            if acc_ident not in self.card_database:
-                card_num = bin + acc_ident
-                checksum = luhn_alg(card_num)
-                card_num += checksum
+            card_num = bin + acc_ident
+            checksum = luhn_alg(card_num)
+            card_num += checksum
+
+            if card_num not in num_list:
                 break
             else:
                 continue
         
         card_pin = "".join([str(randint(0,9)) for _ in range(4)])
 
+        self.cursor.execute(f"""
+        INSERT INTO Bank_cards(number, pin)
+        VALUES ({card_num}, {card_pin})""")
 
+        # Checking if DB takes data correctly
+        # self.cursor.execute("""SELECT * from Bank_cards""")
+        # print(self.cursor.fetchall())
 
-        self.card_database.update({card_num: card_pin})
-        self.balance_database.update({card_num: 0})
         print("\nYour card has been created")
         print(f"Your card number:\n{card_num}")
         print(f"Your card PIN:\n{card_pin}\n")
@@ -89,6 +95,8 @@ class Bank:
                     self.run()
                 if sec_options == "0":
                     print("\nBye!\n")
+                    self.conn.commit()
+                    self.conn.close()
                     exit()
         else:
             print("\nWrong card number or PIN!\n")
@@ -103,6 +111,8 @@ class Bank:
                 self.login()
             if frst_options == "0":
                 print("\nBye!\n")
+                self.conn.commit()
+                self.conn.close()
                 exit()
 
 def main():
