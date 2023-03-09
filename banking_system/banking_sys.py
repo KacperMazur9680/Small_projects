@@ -5,17 +5,14 @@ import sqlite3
 # create connection to sqlite3 -- done
 # create a table if it doesnt exist -- done
 # add new card (new id, new number, pin, balance 0) -- done
-# login to account (check if card number in DB and if the pin is same as in DB) -- todo
-# check balance (take balance from card number in DB) -- todo
+# login to account (check if card number in DB and if the pin is same as in DB) -- done
+# check balance (take balance from card number in DB) -- done
 # conn.commit() and conn.close() before exit() -- done
-
-
-
+ 
 class Bank:
     def __init__(self) -> None:
         self.conn = sqlite3.connect("./banking_system/Bank_cards_DB.s3db")
         self.cursor = self.conn.cursor()
-        self.cursor.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='Bank_cards';")
  
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS Bank_cards (
@@ -50,7 +47,7 @@ class Bank:
                         checksum += 1
                 
         bin = "400000"
-        self.cursor.execute("""SELECT number FROM Bank_cards""")
+        self.cursor.execute("""SELECT number FROM Bank_cards;""")
         num_list = self.cursor.fetchall()
         
         while True:
@@ -69,7 +66,7 @@ class Bank:
 
         self.cursor.execute(f"""
         INSERT INTO Bank_cards(number, pin)
-        VALUES ({card_num}, {card_pin})""")
+        VALUES ({card_num}, {card_pin});""")
 
         # Checking if DB takes data correctly
         # self.cursor.execute("""SELECT * from Bank_cards""")
@@ -82,25 +79,43 @@ class Bank:
     def login(self) -> None:
         card_num = input("\nEnter your card number:\n")
         card_pin = input("Enter your PIN:\n")
-        if card_num in self.card_database.keys() and self.card_database[card_num] == card_pin:
-            print("\nYou have successfully logged in!\n")
 
-            while True:
-                sec_options = input("1. Balance\n2. Log out\n0. Exit\n")
-                if sec_options == "1":
-                    balance = self.balance_database[card_num]
-                    print(f"\nBalance: {balance}\n")
-                if sec_options == "2":
-                    print("\nYou have successfully logged out!\n")
-                    self.run()
-                if sec_options == "0":
-                    print("\nBye!\n")
-                    self.conn.commit()
-                    self.conn.close()
-                    exit()
-        else:
+        try:
+            self.cursor.execute(f"""
+            SELECT pin FROM Bank_cards
+            WHERE number={card_num};""")
+
+            pin = self.cursor.fetchone()[0]
+            print(pin)
+
+            if card_pin != pin:
+                raise TypeError
+
+        except TypeError:
             print("\nWrong card number or PIN!\n")
             self.run()
+
+        print("\nYou have successfully logged in!\n")
+
+        while True:
+            sec_options = input("1. Balance\n2. Log out\n0. Exit\n")
+            if sec_options == "1":
+                self.cursor.execute(f"""
+                SELECT balance FROM Bank_cards
+                WHERE number={card_num};""")
+
+                balance = self.cursor.fetchone()[0]
+                print(f"\nBalance: {balance}\n")
+
+            if sec_options == "2":
+                print("\nYou have successfully logged out!\n")
+                self.run()
+
+            if sec_options == "0":
+                print("\nBye!\n")
+                self.conn.commit()
+                self.conn.close()
+                exit()
 
     def run(self) -> None:
         while True:
