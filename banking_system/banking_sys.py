@@ -2,12 +2,11 @@ from random import randint
 from sys import exit
 import sqlite3
 
-# create connection to sqlite3 -- done
-# create a table if it doesnt exist -- done
-# add new card (new id, new number, pin, balance 0) -- done
-# login to account (check if card number in DB and if the pin is same as in DB) -- done
-# check balance (take balance from card number in DB) -- done
-# conn.commit() and conn.close() before exit() -- done
+# login changes:
+# check balance - done
+# "Add income" add said ammount to balance - todo
+# "Do transfer" transfer money to another account, handle basic transaction errors (ACID) 
+# "Close account" delete the account from db - todo
  
 class Bank:
     def __init__(self) -> None:
