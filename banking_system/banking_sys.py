@@ -4,9 +4,9 @@ import sqlite3
 
 # login changes:
 # check balance - done
-# "Add income" add said ammount to balance - todo
+# "Add income" add said ammount to balance - done
 # "Do transfer" transfer money to another account, handle basic transaction errors (ACID) 
-# "Close account" delete the account from db - todo
+# "Close account" delete the account from db - done
  
 class Bank:
     def __init__(self) -> None:
@@ -62,14 +62,15 @@ class Bank:
                 continue
         
         card_pin = "".join([str(randint(0,9)) for _ in range(4)])
+        print(card_pin)
 
         self.cursor.execute(f"""
         INSERT INTO Bank_cards(number, pin)
-        VALUES ({card_num}, {card_pin});""")
+        VALUES ({card_num}, "{card_pin}");""")
 
         # Checking if DB takes data correctly
-        # self.cursor.execute("""SELECT * from Bank_cards""")
-        # print(self.cursor.fetchall())
+        self.cursor.execute("""SELECT * from Bank_cards""")
+        print(self.cursor.fetchall())
 
         print("\nYour card has been created")
         print(f"Your card number:\n{card_num}")
@@ -85,7 +86,6 @@ class Bank:
             WHERE number={card_num};""")
 
             pin = self.cursor.fetchone()[0]
-            print(pin)
 
             if card_pin != pin:
                 raise TypeError
@@ -97,16 +97,37 @@ class Bank:
         print("\nYou have successfully logged in!\n")
 
         while True:
-            sec_options = input("1. Balance\n2. Log out\n0. Exit\n")
-            if sec_options == "1":
-                self.cursor.execute(f"""
-                SELECT balance FROM Bank_cards
-                WHERE number={card_num};""")
+            sec_options = input("1. Balance\n2. Add income\n3. Do transfer\n4. Close account\n5. Log out\n0. Exit\n")
 
-                balance = self.cursor.fetchone()[0]
+            self.cursor.execute(f"""
+            SELECT balance FROM Bank_cards
+            WHERE number={card_num};""")
+            balance = self.cursor.fetchone()[0]
+
+            if sec_options == "1":
                 print(f"\nBalance: {balance}\n")
 
             if sec_options == "2":
+                income = input("\nEnter income:\n")
+
+                if income.isdigit():
+                    new_balance = int(balance) + int(income)
+                    new_balance = str(new_balance)
+
+                    self.cursor.execute(f"""
+                    UPDATE Bank_cards
+                    SET balance = {new_balance}
+                    WHERE number = {card_num};""")
+                    print("Income was added!\n")
+                
+                else:
+                    print("\nInvalid income, try again.\n")
+            
+            if sec_options == "4":
+                self.cursor.execute(f"""DELETE FROM Bank_cards WHERE number={card_num};""")
+                print("\nThe account has been closed!\n")
+                
+            if sec_options == "5":
                 print("\nYou have successfully logged out!\n")
                 self.run()
 
