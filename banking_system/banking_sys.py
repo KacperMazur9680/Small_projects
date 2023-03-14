@@ -5,7 +5,7 @@ import sqlite3
 # login changes:
 # check balance - done
 # "Add income" add said ammount to balance - done
-# "Do transfer" transfer money to another account, handle basic transaction errors (ACID) 
+# "Do transfer" transfer money to another account, handle basic transaction errors (ACID) - done
 # "Close account" delete the account from db - done
  
 class Bank:
@@ -21,8 +21,7 @@ class Bank:
         balance INTEGER DEFAULT 0
         );""")
 
-    def create_card(self) -> None:
-        def luhn_alg(numbers: str) -> str: 
+    def luhn_alg(self, numbers: str) -> str: 
             list_nums = [num for num in numbers]
             
             multi_odd_id = []
@@ -44,7 +43,8 @@ class Bank:
                         return str(checksum)
                     else:
                         checksum += 1
-                
+
+    def create_card(self) -> None:
         bin = "400000"
         self.cursor.execute("""SELECT number FROM Bank_cards;""")
         num_list = self.cursor.fetchall()
@@ -53,7 +53,7 @@ class Bank:
             ident_vars = [str(randint(0,9)) for _ in range(9)]
             acc_ident = "".join(ident_vars)
             card_num = bin + acc_ident
-            checksum = luhn_alg(card_num)
+            checksum = self.luhn_alg(card_num)
             card_num += checksum
 
             if card_num not in num_list:
@@ -62,15 +62,14 @@ class Bank:
                 continue
         
         card_pin = "".join([str(randint(0,9)) for _ in range(4)])
-        print(card_pin)
 
         self.cursor.execute(f"""
         INSERT INTO Bank_cards(number, pin)
         VALUES ({card_num}, "{card_pin}");""")
 
         # Checking if DB takes data correctly
-        self.cursor.execute("""SELECT * from Bank_cards""")
-        print(self.cursor.fetchall())
+        # self.cursor.execute("""SELECT * from Bank_cards""")
+        # print(self.cursor.fetchall())
 
         print("\nYour card has been created")
         print(f"Your card number:\n{card_num}")
@@ -123,6 +122,53 @@ class Bank:
                 else:
                     print("\nInvalid income, try again.\n")
             
+            if sec_options == "3":
+                print("\nTransfer\n")
+                acc_to_transf = input("Enter card number:\n")
+
+                self.cursor.execute("""
+                SELECT number FROM Bank_cards""")
+                nums_list = [num[0] for num in self.cursor.fetchall()]
+
+
+                if acc_to_transf not in nums_list:
+                    if self.luhn_alg(acc_to_transf[:-1]) != acc_to_transf[-1]:
+                        print("Probably you made a mistake in the card number. Please try again!\n")
+                        continue
+                    else:
+                        print("Such a card does not exist.\n")
+                        continue
+
+                if acc_to_transf == card_num:
+                    print("You can't transfer money to the same account!\n")
+                    continue
+
+                amount = input("Enter how much money you want to transfer:\n")
+                if amount.isdigit():
+                    if int(balance) - int(amount) < 0:
+                        print("Not enough money!\n")
+                        continue
+                else:
+                    print("\nInvalid income, try again.\n")
+
+                self.cursor.execute(f"""
+                UPDATE Bank_cards
+                SET balance = {int(balance)-int(amount)}
+                WHERE number = {card_num}""")
+
+                self.cursor.execute(f"""
+                SELECT balance FROM Bank_cards
+                WHERE number = {acc_to_transf}""")
+                
+                acc_to_transf_balance = self.cursor.fetchone()[0]
+                
+                self.cursor.execute(f"""
+                UPDATE Bank_cards
+                SET balance = {int(acc_to_transf_balance) + int(amount)}
+                WHERE number = {acc_to_transf}""")
+
+                print("Success!\n")
+
             if sec_options == "4":
                 self.cursor.execute(f"""DELETE FROM Bank_cards WHERE number={card_num};""")
                 print("\nThe account has been closed!\n")
