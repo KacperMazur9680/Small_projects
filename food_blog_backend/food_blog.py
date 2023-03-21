@@ -52,6 +52,17 @@ class Food_Blog:
         FOREIGN KEY(recipe_id) REFERENCES recipes(recipe_id),
         FOREIGN KEY(meal_id) REFERENCES meals(meal_id)
         );""")
+       
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS quantity(
+        quantity_id INTEGER PRIMARY KEY,
+        measure_id INTEGER NOT NULL,
+        ingredient_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        recipe_id INTEGER NOT NULL,
+        FOREIGN KEY(measure_id) REFERENCES measures(measure_id),
+        FOREIGN KEY(ingredient_id) REFERENCES ingredients(ingredient_id),
+        FOREIGN KEY(recipe_id) REFERENCES recipes(recipe_id)
+        );""")
 
         self.conn.commit()
         print("Data added.\n")
