@@ -7,7 +7,6 @@ class Food_Blog:
         self.conn = sqlite3.connect(f"./food_blog_backend/{db_name}")
         self.cursor = self.conn.cursor()
 
-
         self.cursor.execute("""PRAGMA foreign_keys = ON;""")
 
         def create_table(table_name: str, name: str, not_null: str="NOT NULL") -> None:
@@ -68,25 +67,27 @@ class Food_Blog:
         print("Data added.\n")
 
     def ask_recipe(self) -> None:
-      print("Pass empty string to exit.")
-      while True:
-         recipe_name = input("Recipe name: ")
-         if recipe_name == "":
-            break
-         recipe_desc = input("Recipe description: ")
+      self.recipe_name = input("Recipe name <pass empty string to exit>: ")
+      if self.recipe_name == "":
+         self.flag = False
+         return 0
+      recipe_desc = input("Recipe description: ")
          
-         self.cursor.execute(f"""
-         INSERT INTO recipes(recipe_name, recipe_description)
-         VALUES ('{recipe_name}', '{recipe_desc}');""")
+      self.cursor.execute(f"""
+      INSERT INTO recipes(recipe_name, recipe_description)
+      VALUES ('{self.recipe_name}', '{recipe_desc}');""")
 
+      self.conn.commit()
+
+    def ask_serving(self) -> None:
          meals = self.cursor.execute("""SELECT * FROM meals;""").fetchall()
          for meal in meals:
             id_, name = meal
             print(f"{id_}) {name}", end=" ")
 
-         servings = input("\nWhen the dish can be served (space separetad answer): ").split()
+         servings = input("\nWhen the dish can be served (space separated answer): ").split()
 
-         recipe_id = self.cursor.execute(f'SELECT recipe_id FROM recipes WHERE recipe_name = "{recipe_name}"').fetchone()[0]
+         recipe_id = self.cursor.execute(f'SELECT recipe_id FROM recipes WHERE recipe_name = "{self.recipe_name}"').fetchone()[0]
 
          for serving in servings:
             self.cursor.execute(f"""
@@ -95,8 +96,43 @@ class Food_Blog:
 
          self.conn.commit()
 
+    def ask_quantity(self) -> None:
+       measures = self.cursor.execute("SELECT measure_name FROM measures").fetchall()
+       measures = [msr[0] for msr in measures]
+       print(measures)
+
+       ingredients = self.cursor.execute("SELECT ingredient_name FROM ingredients").fetchall()
+       ingredients = [ingr[0] for ingr in ingredients]
+
+       while True:
+         info = input("\nPlease enter info in the following format <quantity measure ingredient>\n" \
+                      "Input quantity of ingredient <enter empty string to stop>: ")
+         if info == "":
+            break
+         
+         info = info.split()
+         if info[1] not in measures:
+            print("The measure is not conclusive!")
+            continue
+
+         if info[2] not in ingredients:
+            print("The ingredient is not conclusive!")
+            continue
+
+         self.conn.commit()
+
+
+
+
     def run(self):
-      self.ask_recipe()
+      self.flag = True
+      while self.flag:
+         self.ask_recipe()
+         if self.flag == False:
+            break
+         self.ask_serving()
+         self.ask_quantity()
+
       self.conn.close()
 
 if __name__ == "__main__":
