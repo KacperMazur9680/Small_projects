@@ -87,19 +87,18 @@ class Food_Blog:
 
          servings = input("\nWhen the dish can be served (space separated answer): ").split()
 
-         recipe_id = self.cursor.execute(f'SELECT recipe_id FROM recipes WHERE recipe_name = "{self.recipe_name}"').fetchone()[0]
+         self.recipe_id = self.cursor.execute(f'SELECT recipe_id FROM recipes WHERE recipe_name = "{self.recipe_name}"').fetchone()[0]
 
          for serving in servings:
             self.cursor.execute(f"""
             INSERT INTO serve(recipe_id, meal_id)
-            VALUES ({recipe_id}, {serving});""")
+            VALUES ({self.recipe_id}, {serving});""")
 
          self.conn.commit()
 
     def ask_quantity(self) -> None:
        measures = self.cursor.execute("SELECT measure_name FROM measures").fetchall()
        measures = [msr[0] for msr in measures]
-       print(measures)
 
        ingredients = self.cursor.execute("SELECT ingredient_name FROM ingredients").fetchall()
        ingredients = [ingr[0] for ingr in ingredients]
@@ -111,18 +110,34 @@ class Food_Blog:
             break
          
          info = info.split()
-         if info[1] not in measures:
-            print("The measure is not conclusive!")
-            continue
+         if len(info) == 2:
+            if info[1] not in ingredients:
+               print("The ingredient is not conclusive!")
+               continue
+            quantity = info[0]
+            ingredient = info[1]
+            measure = ""
 
-         if info[2] not in ingredients:
-            print("The ingredient is not conclusive!")
-            continue
+         
+         else:
+            if info[1] not in measures:
+               print("The measure is not conclusive!")
+               continue
 
-         self.conn.commit()
-
-
-
+            if info[2] not in ingredients:
+               print("The ingredient is not conclusive!")
+               continue
+            
+            quantity = info[0]
+            measure = info[1]
+            ingredient = info[2]
+         
+         self.cursor.execute(f"""INSERT INTO quantity(measure_id, ingredient_id, quantity, recipe_id)
+         VALUES ((select measure_id from measures where measure_name = "{measure}"), \
+         (select ingredient_id from ingredients where ingredient_name = "{ingredient}"), {quantity}, \
+         {self.recipe_id});""")
+         
+       self.conn.commit()
 
     def run(self):
       self.flag = True
