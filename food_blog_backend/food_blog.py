@@ -1,10 +1,15 @@
 import sqlite3
 import sys
+import argparse
 
 class Food_Blog:
     def __init__(self) -> None:
-        db_name = sys.argv[1]
-        self.conn = sqlite3.connect(f"./food_blog_backend/{db_name}")
+        parser = argparse.ArgumentParser(description="Print out available recipes with given info.")
+        parser.add_argument("db_name", type=str, help="insert the database name with file extension.")
+        parser.add_argument("--ingredients", type=str, help="insert comma separated ingredients.")
+        parser.add_argument("--meals", type=str, help="insert comma separated mealtimes.")
+        self.args = parser.parse_args()
+        self.conn = sqlite3.connect(f"./food_blog_backend/{self.args.db_name}")
         self.cursor = self.conn.cursor()
 
         self.cursor.execute("""PRAGMA foreign_keys = ON;""")
@@ -118,7 +123,6 @@ class Food_Blog:
             ingredient = info[1]
             measure = ""
 
-         
          else:
             if info[1] not in measures:
                print("The measure is not conclusive!")
@@ -138,17 +142,46 @@ class Food_Blog:
          {self.recipe_id});""")
          
        self.conn.commit()
+    
+    def select_recipes(self) -> None:
+      try:
+         # ingredients = self.args.ingredients.split(",")
+         meals = tuple(self.args.meals.split(","))
+      except AttributeError:
+         print("Both parameters have to be input for the recipe selecting script to work properly.")
+         sys.exit(1)
+      
+      if len(meals) == 1:
+         meals = str(meals).replace(",", "")
+      # print(self.cursor.execute("""SELECT recipe_name FROM recipes WHERE recipe_id = (SELECT recipe_id FROM quantity WHERE ingredient_id = (SELECT ingredient_id FROM ingredients WHERE ingredient_name = "milk"))""").fetchall())
+      print(self.cursor.execute(f"""
+        SELECT recipe_name
+        FROM recipes 
+        WHERE recipe_id IN 
+            (SELECT recipe_id 
+            FROM serve WHERE meal_id IN 
+               (SELECT meal_id 
+               FROM meals 
+               WHERE meal_name IN {meals}))""").fetchall())
 
-    def run(self):
-      self.flag = True
-      while self.flag:
-         self.ask_recipe()
-         if self.flag == False:
-            break
-         self.ask_serving()
-         self.ask_quantity()
+    def run(self) -> None:
+      if len(sys.argv) == 2:
+         self.flag = True
+
+         while self.flag:
+            self.ask_recipe()
+
+            if self.flag == False:
+               break
+
+            self.ask_serving()
+            self.ask_quantity()
+
+      else:
+         self.select_recipes()
 
       self.conn.close()
+
 
 if __name__ == "__main__":
    app = Food_Blog()
