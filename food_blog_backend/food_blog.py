@@ -145,7 +145,7 @@ class Food_Blog:
     
     def select_recipes(self) -> None:
       try:
-         # ingredients = self.args.ingredients.split(",")
+         ingredients = tuple(self.args.ingredients.split(","))
          meals = tuple(self.args.meals.split(","))
       except AttributeError:
          print("Both parameters have to be input for the recipe selecting script to work properly.")
@@ -153,16 +153,47 @@ class Food_Blog:
       
       if len(meals) == 1:
          meals = str(meals).replace(",", "")
-      # print(self.cursor.execute("""SELECT recipe_name FROM recipes WHERE recipe_id = (SELECT recipe_id FROM quantity WHERE ingredient_id = (SELECT ingredient_id FROM ingredients WHERE ingredient_name = "milk"))""").fetchall())
-      print(self.cursor.execute(f"""
-        SELECT recipe_name
+
+      if len(ingredients) == 1:
+         ingredients = str(ingredients).replace(",", "")
+            
+      recipes = self.cursor.execute(f"""
+        SELECT recipe_name 
         FROM recipes 
         WHERE recipe_id IN 
-            (SELECT recipe_id 
-            FROM serve WHERE meal_id IN 
-               (SELECT meal_id 
+        (
+            SELECT recipe_id 
+            FROM quantity 
+            WHERE ingredient_id IN 
+               (
+               SELECT ingredient_id 
+               FROM ingredients 
+               WHERE ingredient_name IN {ingredients}
+               ) 
+            GROUP BY recipe_id 
+            HAVING COUNT(DISTINCT ingredient_id) = {len(ingredients)}
+        )
+        
+        INTERSECT
+
+         SELECT recipe_name
+         FROM recipes 
+         WHERE recipe_id IN 
+         (
+             SELECT recipe_id 
+             FROM serve WHERE meal_id IN 
+             (
+               SELECT meal_id 
                FROM meals 
-               WHERE meal_name IN {meals}))""").fetchall())
+               WHERE meal_name IN {meals}
+             )
+         )
+      """).fetchall()
+
+      if len(recipes) == 0:
+         print("There are no such recipes in the database.")
+      else:
+         print(f"Recipes selected for you: {', '.join([recipe[0] for recipe in recipes])}")
 
     def run(self) -> None:
       if len(sys.argv) == 2:
