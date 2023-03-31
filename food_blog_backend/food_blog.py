@@ -158,7 +158,8 @@ class Food_Blog:
 
       if len(ingredients) == 1:
          ingredients = str(ingredients).replace(",", "")
-            
+      
+      # output recipes with only the inputed ingredients      
       recipes = self.cursor.execute(f"""
         SELECT recipe_name 
         FROM recipes 
@@ -190,8 +191,10 @@ class Food_Blog:
                WHERE meal_name IN {meals}
              )
          )
+ 
       """).fetchall()
 
+      # output recipes with inputed ingredients or more      
       # recipes = self.cursor.execute(f"""
       #   SELECT recipe_name 
       #   FROM recipes 
