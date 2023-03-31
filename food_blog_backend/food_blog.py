@@ -11,6 +11,8 @@ class Food_Blog:
         self.args = parser.parse_args()
         self.conn = sqlite3.connect(f"./food_blog_backend/{self.args.db_name}")
         self.cursor = self.conn.cursor()
+        
+        self.count = 0
 
         self.cursor.execute("""PRAGMA foreign_keys = ON;""")
 
@@ -75,11 +77,12 @@ class Food_Blog:
       if self.recipe_name == "":
          self.flag = False
          return 0
+      self.count += 1
       recipe_desc = input("Recipe description: ")
          
       self.cursor.execute(f"""
-      INSERT INTO recipes(recipe_name, recipe_description)
-      VALUES ('{self.recipe_name}', '{recipe_desc}');""")
+      INSERT INTO recipes(recipe_id, recipe_name, recipe_description)
+      VALUES ({self.count}, '{self.recipe_name}', '{recipe_desc}');""")
 
       self.conn.commit()
 
@@ -91,7 +94,7 @@ class Food_Blog:
 
          servings = input("\nWhen the dish can be served (space separated answer): ").split()
 
-         self.recipe_id = self.cursor.execute(f'SELECT recipe_id FROM recipes WHERE recipe_name = "{self.recipe_name}"').fetchone()[0]
+         self.recipe_id = self.cursor.execute(f'SELECT recipe_id FROM recipes WHERE recipe_name = {self.count}').fetchone()[0]
 
          for serving in servings:
             self.cursor.execute(f"""
