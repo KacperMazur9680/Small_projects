@@ -6,3 +6,9 @@ Below is a diagram of the database tables:
 
 ## Example
 > python .\Small_projects\food_blog_backend\food_blog.py food_blog.db
+
+# First option from Food_Blog.select_recipes()
+> python .\Small_projects\food_blog_backend\food_blog.py food_blog.db --ingredients="sugar,milk,strawberry" --meals="breakfast,brunch" 
+
+# Second option from Food_Blog.select_recipes()
+> python .\Small_projects\food_blog_backend\food_blog.py food_blog.db --ingredients="milk,cacao" --meals="breakfast,brunch"
