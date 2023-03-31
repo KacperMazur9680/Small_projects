@@ -69,7 +69,6 @@ class Food_Blog:
         );""")
 
         self.conn.commit()
-        print("Data added.\n")
 
     def ask_recipe(self) -> None:
       self.recipe_name = input("Recipe name <pass empty string to exit>: ")
@@ -189,6 +188,29 @@ class Food_Blog:
              )
          )
       """).fetchall()
+
+      # recipes = self.cursor.execute(f"""
+      #   SELECT recipe_name 
+      #   FROM recipes 
+      #   WHERE recipe_id IN (
+      #       SELECT recipe_id 
+      #       FROM quantity 
+      #       WHERE ingredient_id IN (
+      #           SELECT ingredient_id 
+      #           FROM ingredients 
+      #           WHERE ingredient_name IN {ingredients}
+      #       ) 
+      #       GROUP BY recipe_id 
+      #       HAVING COUNT(*) >= {len(ingredients)}
+      #   ) AND recipe_id IN (
+      #       SELECT recipe_id 
+      #       FROM serve 
+      #       WHERE meal_id IN (
+      #           SELECT meal_id 
+      #           FROM meals 
+      #           WHERE meal_name IN {meals}
+      #       )
+      #   )""").fetchall()
 
       if len(recipes) == 0:
          print("There are no such recipes in the database.")
