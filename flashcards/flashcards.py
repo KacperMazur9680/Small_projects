@@ -130,7 +130,11 @@ class Flashcards:
         self.log_write(self.log_time(), f'{num} cards have been saved')
 
     def ask(self) -> None:
-        times = int(input("How many times to ask?\n"))
+        if len(self.base) == 0:
+            print("\nThere are no flashcards to practice!\n")
+            return 0
+        
+        times = int(input("\nHow many times to ask?\n"))
         self.log_write(self.log_time(), f'How many times to ask?')
         self.log_write(self.log_time(), str(times))
         track = 0
@@ -138,13 +142,20 @@ class Flashcards:
         while track < times:
             for term, defin in self.base.items():
                 if track < times:
-                    ans = input(f'Print the definition of "{term}":\n')
-                    self.log_write(self.log_time(), f'Print the definition of "{term}":')
+                    ans = input(f'Question: {term}\n(Press "y" to see the answer or press "n" to skip):\n')
+                    self.log_write(self.log_time(), (f'Question: "{term}"\n(Press "y" to see the answer'
+                                                    'or press "n" to skip):'))
                     self.log_write(self.log_time(), ans)
 
                     if ans == defin:
-                        print("Correct!")
+                        print("Correct!\n")
                         self.log_write(self.log_time(), f"Correct!")
+                    elif ans == "y":
+                        print(f"Answer: {defin}\n")
+                        self.log_write(self.log_time(), f"Answer: {defin}")
+                        
+                    elif ans == "n":
+                        pass
                     else:
                         if ans in self.base.values():
                             for key, val in self.base.items():
@@ -163,6 +174,7 @@ class Flashcards:
 
                 else:
                     break
+        print()
 
     def log(self) -> None:
         filename = input("File name:\n")
@@ -229,6 +241,7 @@ class Flashcards:
             self.hardest()
         if action == "reset stats":
             self.reset_stats()
+        print(f"\n{action} is not an option\n")
 
 def main():
     fc = Flashcards()
