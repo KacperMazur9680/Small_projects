@@ -35,17 +35,22 @@ class Flashcards:
             if option == "1":
                 self.log_write(self.log_time(), option)
 
-                self.term = input(f"\nQuestion:\n")
-                self.log_write(self.log_time(), f"Question:")
-                self.log_write(self.log_time(), self.term)
-                check_dup(self.term)
+                while True:
+                    self.term = input(f"\nQuestion:\n")
+                    self.log_write(self.log_time(), f"Question:")
+                    self.log_write(self.log_time(), self.term)
+                    check_dup(self.term)
+                    if self.term.strip() == "":
+                        continue
+                    else:
+                        break
 
                 while True:
                     self.defin = input(f"Answer:\n")
                     self.log_write(self.log_time(), f"Answer:")
                     self.log_write(self.log_time(), self.defin)
                     check_dup(self.defin)
-                    if self.defin == "":
+                    if self.defin.strip() == "":
                         continue
                     else:
                         break
@@ -227,20 +232,29 @@ class Flashcards:
     def run(self, action: str) -> None:
         if action == "1":
             self.add()
-        if action == "2":
+            return None
+        elif action == "2":
             self.ask()
-        if action == "remove":
+            return None
+        elif action == "remove":
             self.remove()
-        if action == "import":
+            return None
+        elif action == "import":
             self._import()
-        if action == "export":
+            return None
+        elif action == "export":
             self.export()
-        if action == "log":
+            return None
+        elif action == "log":
             self.log()
-        if action == "hardest card":
+            return None
+        elif action == "hardest card":
             self.hardest()
-        if action == "reset stats":
+            return None
+        elif action == "reset stats":
             self.reset_stats()
+            return None
+        
         print(f"\n{action} is not an option\n")
 
 def main():
