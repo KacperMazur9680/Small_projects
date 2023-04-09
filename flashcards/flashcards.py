@@ -29,21 +29,46 @@ class Flashcards:
             if phrase in self.base.values():
                 self.defin = try_again("definition", phrase)
 
-        self.term = input(f"The card:\n")
-        self.log_write(self.log_time(), f"The card:")
-        self.log_write(self.log_time(), self.term)
-        check_dup(self.term)
+        while True:
+            option = input("\n1. Add a new flashcard\n2. Exit\n")
+            self.log_write(self.log_time(), f'1. Add a new flashcard\n2. Exit')
+            if option == "1":
+                self.log_write(self.log_time(), option)
 
-        self.defin = input(f"The definition of the card:\n")
-        self.log_write(self.log_time(), f"The definition of the card:")
-        self.log_write(self.log_time(), self.defin)
-        check_dup(self.defin)
+                while True:
+                    self.term = input(f"\nQuestion:\n")
+                    self.log_write(self.log_time(), f"Question:")
+                    self.log_write(self.log_time(), self.term)
+                    check_dup(self.term)
+                    if self.term.strip() == "":
+                        continue
+                    else:
+                        break
 
-        self.base.update({self.term:self.defin})
-        self.wrong_ans_base.update({self.term:0})
+                while True:
+                    self.defin = input(f"Answer:\n")
+                    self.log_write(self.log_time(), f"Answer:")
+                    self.log_write(self.log_time(), self.defin)
+                    check_dup(self.defin)
+                    if self.defin.strip() == "":
+                        continue
+                    else:
+                        break
 
-        print(f'The pair ("{self.term}":"{self.defin}") has been added.\n')
-        self.log_write(self.log_time(), f'The pair ("{self.term}":"{self.defin}") has been added.')
+                self.base.update({self.term:self.defin})
+                self.wrong_ans_base.update({self.term:0})
+
+                print(f'The card ("{self.term}":"{self.defin}") has been added.')
+                self.log_write(self.log_time(), f'The pair ("{self.term}":"{self.defin}") has been added.')
+                continue
+
+            if option == "2":
+                self.log_write(self.log_time(), option)
+                print()
+                break
+            
+            print(f"{option} is not an option")
+            self.log_write(self.log_time(), f"{option} is not an option")
 
     def remove(self) -> None:
         card = input("Which card?\n")
@@ -110,7 +135,11 @@ class Flashcards:
         self.log_write(self.log_time(), f'{num} cards have been saved')
 
     def ask(self) -> None:
-        times = int(input("How many times to ask?\n"))
+        if len(self.base) == 0:
+            print("\nThere are no flashcards to practice!\n")
+            return 0
+        
+        times = int(input("\nHow many times to ask?\n"))
         self.log_write(self.log_time(), f'How many times to ask?')
         self.log_write(self.log_time(), str(times))
         track = 0
@@ -118,13 +147,20 @@ class Flashcards:
         while track < times:
             for term, defin in self.base.items():
                 if track < times:
-                    ans = input(f'Print the definition of "{term}":\n')
-                    self.log_write(self.log_time(), f'Print the definition of "{term}":')
+                    ans = input(f'Question: {term}\n(Press "y" to see the answer or press "n" to skip):\n')
+                    self.log_write(self.log_time(), (f'Question: "{term}"\n(Press "y" to see the answer'
+                                                    'or press "n" to skip):'))
                     self.log_write(self.log_time(), ans)
 
                     if ans == defin:
-                        print("Correct!")
+                        print("Correct!\n")
                         self.log_write(self.log_time(), f"Correct!")
+                    elif ans == "y":
+                        print(f"Answer: {defin}\n")
+                        self.log_write(self.log_time(), f"Answer: {defin}")
+                        
+                    elif ans == "n":
+                        pass
                     else:
                         if ans in self.base.values():
                             for key, val in self.base.items():
@@ -143,6 +179,7 @@ class Flashcards:
 
                 else:
                     break
+        print()
 
     def log(self) -> None:
         filename = input("File name:\n")
@@ -193,23 +230,32 @@ class Flashcards:
         self.log_write(self.log_time(), 'Card statistics have been reset.')
 
     def run(self, action: str) -> None:
-        action = action.lower()
-        if action == "add":
+        if action == "1":
             self.add()
-        if action == "remove":
-            self.remove()
-        if action == "import":
-            self._import()
-        if action == "export":
-            self.export()
-        if action == "ask":
+            return None
+        elif action == "2":
             self.ask()
-        if action == "log":
+            return None
+        elif action == "remove":
+            self.remove()
+            return None
+        elif action == "import":
+            self._import()
+            return None
+        elif action == "export":
+            self.export()
+            return None
+        elif action == "log":
             self.log()
-        if action == "hardest card":
+            return None
+        elif action == "hardest card":
             self.hardest()
-        if action == "reset stats":
+            return None
+        elif action == "reset stats":
             self.reset_stats()
+            return None
+        
+        print(f"\n{action} is not an option\n")
 
 def main():
     fc = Flashcards()
@@ -222,12 +268,12 @@ def main():
         fc._import(outfile=True, outfilename=args.import_from)
         
     while True:
-        action = input("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):\n")
-        fc.log_write(fc.log_time(), "Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):")
+        action = input("1. Add flashcards\n2. Practice flashcards\n3. Exit\n")
+        fc.log_write(fc.log_time(), "1. Add flashcards\n2. Practice flashcards\n3.Exit")
         fc.log_write(fc.log_time(), action)
 
-        if action.lower() == "exit":
-            print("Bye bye!\n")
+        if action == "3":
+            print("\nBye bye!\n")
             if args.export_to:
                 fc.export(outfile=True, outfilename=args.export_to)
             break
